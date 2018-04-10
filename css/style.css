@@ -8,6 +8,7 @@ body{
 
 /* Global */
 .container{
+  background-color:#f4f4f4;
   width:80%;
   margin: auto;
   overflow:hidden;
@@ -20,7 +21,7 @@ ul{
 
 /* Header */
 header{
-  background-color:#f3f3f3;
+  background-color:#f4f4f4;
   padding-top: 30px;
   min-height:70px;
   border-bottom:red 3px solid;
@@ -63,8 +64,13 @@ header .highlight, header .current a, header a:hover{
   font-weight: bold;
 }*/
 
+#about{
+  padding: 30px 15px 30px 15px;
+}
+
 #about-image img{
   float: left;
+  padding-bottom: 30px;
   margin-right: 15px;
   width: 20%;
 }
