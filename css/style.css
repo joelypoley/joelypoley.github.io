@@ -98,8 +98,6 @@ footer{
   padding-top: 30px;
 }
 /* Showcase */
-/*#showcase{
-  min-height:200px;
-  background: url('../img/wave.png');
-  background-size: contain;
-}*/
+#showcase img{
+  padding-top: 3px;
+}
