@@ -8,13 +8,23 @@ body{
 
 /* Global */
 .container{
+  background-color:#ffffff;
+  width:80%;
+  margin: auto;
+  padding: 20px;
+  overflow:hidden;
+  border: solid;
+  border-width: 1px;
+}
+
+.banner{
   background-color:#f4f4f4;
   width:80%;
   margin: auto;
   overflow:hidden;
 }
 
-ul{
+header ul{
   margin: 0;
   padding: 0;
 }
@@ -64,19 +74,27 @@ header .highlight, header .current a, header a:hover{
   font-weight: bold;
 }*/
 
-#about{
+/*#about{
   padding: 30px 15px 30px 15px;
-}
+}*/
 
 #about-image img{
   float: left;
-  padding-bottom: 30px;
+  /*padding-bottom: 30px; */
   margin-right: 15px;
   width: 20%;
 }
 
+/*h3 {
+margin-bottom: 0.6em;
+border-bottom: 1px solid #aaa;
+padding: 0.5em 0 0.17em 0;
+color: #000;
+}*/
+
 footer{
-  text-align: center;
+  float: right;
+  padding-right: 10%;
   padding-top: 30px;
 }
 /* Showcase */
