@@ -16,10 +16,11 @@ body{
   overflow:hidden;
   border: solid;
   border-width: 1px;
+  border-color: #ffffff;
 }
 
 .banner{
-  background-color:#f4f4f4;
+  background-color:#ffffff;
   width:80%;
   margin: auto;
   overflow:hidden;
@@ -32,7 +33,7 @@ header ul{
 
 /* Header */
 header{
-  background-color:#f4f4f4;
+  background-color:#ffffff;
   padding-top: 30px;
   min-height:70px;
   border-bottom:red 3px solid;
