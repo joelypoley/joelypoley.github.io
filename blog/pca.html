@@ -87,31 +87,31 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
 
 <p><img src="img/plot7.png" alt="scatter plot" class="inline_img"></p>
 
-<p>The data is now one dimensional since it fits on a single line and each point is has not moved too far from its original spot.</p>
+<p>The data is now one dimensional since it fits on a single line and each point has not moved too far from its original spot.</p>
 
-<p>In two dimensions this is the same as projecting onto the line of best fit, but this technique generalizes. If your data is \(n\)-dimensional then PCA lets you find the best \(m\)-dimensional subspace to project the data down onto; you just project your data onto the subspace spanned by the \(m\) eigenvectors with the largest eigenvalues. If \(m &lt;&lt; n\) this can compress your data a lot, and PCA guarantees that this \(m\) dimensional subspace is optimal in the sense that it minimizes the mean squared error between the original data points and the projected data points.</p>
+<p>In two dimensions this is the same as projecting onto the line of best fit, but this technique generalizes. If your data is \(n\)-dimensional then PCA lets you find the best \(m\)-dimensional subspace to project the data down onto; you just project your data onto the subspace spanned by the \(m\) eigenvectors with the largest eigenvalues. If \(m &lt;&lt; n\) this can compress your data a lot, and PCA guarantees that this \(m\) dimensional subspace is optimal, in the sense that it minimizes the mean squared error between the original data points and the projected data points.</p>
 
 <h1 id="toc_2">II.</h1>
 
 <p>The data in the plots above was generated using a random number generator. Let&#39;s try PCA on a real dataset.</p>
 
-<p>We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will only look at zeros and ones in the dataset. Below is an example of the images from mnist.</p>
+<p>We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will, discard images of 2,3,4,5,6,7,8,9 and only look at images of 0 and 1 in the dataset. Below is an example of the images from MNIST.</p>
 
 <p><img src="img/plot8.png" alt="scatter plot" class="inline_img"></p>
 
 <p>To process the images we will:</p>
 
 <ul>
-<li>Flatten each image into a \(784 = 28\times 28\) vector.</li>
-<li>Use PCA to project each 784 dimensional vector to a 2 dimensional vector.</li>
-<li>Plot the 2 dimensional vectors, with images of &#39;0&#39; in red and images of &#39;1&#39; in blue.</li>
+<li>Flatten each image into a \(784 = 28\times 28\)-dimensional vector.</li>
+<li>Use PCA to project each 784-dimensional vector to a 2-dimensional vector.</li>
+<li>Plot the 2-dimensional vectors, with images of &#39;0&#39; in red and images of &#39;1&#39; in blue.</li>
 </ul>
 
 <p>The result looks like this.</p>
 
 <p><img src="img/plot9.png" alt="scatter plot" class="inline_img"></p>
 
-<p>You can see that the zeros and the ones are clustered together, and all we did was linearly project the raw pixels down to a two dimensional subspace!</p>
+<p>You can see that the zeros are clustered to the left, and the ones are clustered to the right. We could create a reasonable classifier by drawing a vertical line at \(x = - 250\), and all we did was linearly project the raw pixels down to a two dimensional subspace!</p>
 
 <h2 id="toc_3">III.</h2>
 
