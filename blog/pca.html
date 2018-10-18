@@ -161,7 +161,7 @@ We now rewrite the error using matrix algebra
 &amp;=\tr\left(( X- P_VX)( X^\top - X^\top P_V^\top)\right) \\
 &amp;=\tr\left(XX^\top - XX^\top P_V^\top - P_VXX^\top - P_VXX^\top P_V^\top \right) \\
 &amp;=\tr\left(W- W P_V^\top - P_VW - P_VW P_V^\top \right) &amp; (W = XX^\top)\\
-&amp;=\tr\left(W- W P_V - P_VW - P_VW P_V \right) &amp; (P_V = P_V^\top \text{ since $P_V$ is a projection matrix})\\
+&amp;=\tr\left(W- W P_V - P_VW - P_VW P_V \right) &amp; (P_V = P_V^\top )\\
 &amp;=\tr(W)- \tr(W P_V) - \tr(P_VW) - \tr(P_VW P_V ) \\
 &amp;=\tr(W)- \tr(P_VW ) - \tr(P_VW) - \tr(P_VW) &amp; (\tr(AB) = \tr(BA) \text{ and } P_V^2 = P_V)\\
 &amp;=\tr(W)- 3\tr(P_VW).
@@ -230,13 +230,13 @@ since a projected vector always has length less than or equal to the original ve
 
 <p>The second step is to observe that \(\sum_{i=1}^d (\alpha_i^2 + \beta_i^2) = \|\alpha \|_2^2 + \|\beta \|_2^2 = 2\).</p>
 
-<p>Finally we want to maximize 
-\[ \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \]
+<p>Finally, we want to maximize 
+\[ \mathrm{tr}(P_VW) = \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \]
 and we know that
 \[\alpha_i^2 + \beta_i^2 \leq 1 \text{ and } \sum_{i=1}^d(\alpha_i^2 + \beta_i^2) = 2 .\]</p>
 
 <p>The sum \(\sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2)\) is maximized when when the first and second coefficient are as large as possible, i.e. when \(\alpha_1^2 + \beta_1^2 = \alpha_2^2 + \beta_2^2 = 1\). But then the second condition implies that \(\alpha_i^2 + \beta_i^2 = 0\) for \(i &gt; 2\). Thus
-\[ \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \leq \lambda_1 + \lambda_2. \]
+\[ \mathrm{tr}(P_VW) = \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \leq \lambda_1 + \lambda_2. \]
 \(\square\)</p>
 
 <hr>
