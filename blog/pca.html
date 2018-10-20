@@ -274,6 +274,28 @@ and we know that
 \[ \mathrm{tr}(P_VW) = \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \leq \lambda_1 + \lambda_2. \]
 \(\square\)</p>
 
+We also need to prove that the size of the eigenvalue is the in the direction of the corresponding eigenvalue.
+
+<p><strong>Theorem:</strong> As in the previous theorem let \(X = \begin{pmatrix}x_1 & x_2 & \cdots & x_n \end{pmatrix}\) be the data matrix, \(W = XX^\top\) the convariance matrix, \(u_1, \dots , u_d\) the eigenvectors of \(W\) and \(\lambda_1, \dots , \lambda_d\) the eigenvalues. Let \(P_{u_i}: \mathbb{R}^d \to \mathbb{R}^d\) be the projection operator onto the subspace \(\mathrm{span}\{u_i\}\). Then \[
+    \sum_{j=1}^m\|P_{u_i}x_j\|_2^2 = \lambda_i
+\] </p>
+
+<p><em>Proof:</em> </p>
+
+<p>
+The working is similar to the previous proof so I'll omit some steps.
+\[
+\begin{align}
+\sum_{j=1}^m\|P_{u_i}x_j\|_2^2 
+&amp;= \|u_iu_i^\top X\|_F^2 \\
+&amp;= \mathrm{tr}((u_iu_i^\top X)(u_iu_i^\top X)^\top)  \\
+&amp;= \mathrm{tr}(u_i^\top W u_i)  \\
+&amp;=  \mathrm{tr}((U^\top u_i)^\top D (U^\top v_i) \\
+&amp;= \lambda_i .
+\end{align}
+\] 
+</p>
+
 <hr>
 
 <p><b id="f1">1</b> I actually scaled by two times the square root of the eigenvalue. The eigenvalue tells you the variance and I wanted the standard deviation. I multiplied by two so that ellipse would capture most of the data. <a href="#a1">↩</a></p>
