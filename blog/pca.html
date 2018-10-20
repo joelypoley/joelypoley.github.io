@@ -50,7 +50,7 @@
 
 
 
-<p>Principal component analysis is a form of <a href="https://en.wikipedia.org/wiki/Feature_engineering">feature engineering</a> that reduces the number of dimensions needed to represent your data. If a network has fewer inputs then there are less weights to train, which makes it easier and faster to train the network.</p>
+<p>Principal component analysis is a form of <a href="https://en.wikipedia.org/wiki/Feature_engineering">feature engineering</a> that reduces the number of dimensions needed to represent your data. If a network has fewer inputs then there are less weights to train, which makes it easier and faster to train the model.</p>
 
 <p><img src="img/plot1.png" alt="scatter plot" class="inline_img"></p>
 
@@ -73,7 +73,7 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
 
 <p><img src="img/plot4.png" alt="scatter plot" class="inline_img"></p>
 
-<p>The eigenvectors tell us the <em>direction</em> of the data. The first eigenvector has the same slope as the data and the second eigenvector is perpendicular to the first. Now let&#39;s scale each of the eigenvectors by its corresponding eigenvalue <sup id="a1"><a href="#f1">1</a></sup>.</p>
+<p>The eigenvectors tell us the <em>direction</em> of the data. The first eigenvector in the picture above has the same slope as the data and the second eigenvector is perpendicular to the first. Now let&#39;s scale each of the eigenvectors by its corresponding eigenvalue <sup id="a1"><a href="#f1">1</a></sup>.</p>
 
 <p><img src="img/plot5.png" alt="scatter plot" class="inline_img"></p>
 
@@ -93,7 +93,7 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
 
 <p>The data in the plots above was generated using a random number generator. Let&#39;s try PCA on a real dataset.</p>
 
-<p>We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will, discard images of 2,3,4,5,6,7,8,9 and only look at images of 0 and 1 in the dataset. Below are some examples of the images from MNIST.</p>
+<p>We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will discard images of 2,3,4,5,6,7,8,9 and only look at images of 0 and 1 in the dataset. Below are some examples of the images from MNIST.</p>
 
 <p><img src="img/plot8.png" alt="scatter plot" class="inline_img"></p>
 
@@ -117,7 +117,7 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
 
 <h2 id="toc_3">III.</h2>
 
-<p>It's not obvious why the eigenvalues and eigenvectors of the covariance matrix have all these useful properties. There's a proof at the end of the post, but it's not particularly enlightening. Thankfully there's a more intuitive way of thinking about it.</p>
+<p>It's not obvious why the eigenvalues and eigenvectors of the covariance matrix have all these useful properties. There are proofs at the end of the post, but they're not particularly enlightening. Thankfully there's a more intuitive way of thinking about it.</p>
 
 <p>Continuing with the MNIST example, let \(p_1\) be the vector where the \(i\)-th entry is the first pixel in the \(i\)-th image. Simlarly let \(p_2, p_3, \dots , p_{784}\) be the vectors consisting of the 2nd, 3rd ... , 784th pixels across all images. Then 
 \[
@@ -130,7 +130,7 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
     \end{pmatrix}.
 \]</p>
 
-<p>The \(ij\)-th entry \(\langle p_i, p_j \rangle\) measures how correlated the variables \(p_i\) and \(p_j\) are. </p>
+<p>The \(ij\)-th entry \(\langle p_i, p_j \rangle\) measures how correlated the \(i\)-th and \(j\)-th pixels are.</p>
 
 <p>This matrix is positive semidefinite so there is an orthonormal change of basis which diagonalizes it.
 \[\begin{pmatrix}
@@ -274,9 +274,9 @@ and we know that
 \[ \mathrm{tr}(P_VW) = \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \leq \lambda_1 + \lambda_2. \]
 \(\square\)</p>
 
-We also need to prove that the size of the eigenvalue is the in the direction of the corresponding eigenvalue.
+We also need to prove that the size of the eigenvalue is proportional to the variance in the direction of the corresponding eigenvalue.
 
-<p><strong>Theorem:</strong> As in the previous theorem let \(X = \begin{pmatrix}x_1 & x_2 & \cdots & x_n \end{pmatrix}\) be the data matrix, \(W = XX^\top\) the convariance matrix, \(u_1, \dots , u_d\) the eigenvectors of \(W\) and \(\lambda_1, \dots , \lambda_d\) the eigenvalues. Let \(P_{u_i}: \mathbb{R}^d \to \mathbb{R}^d\) be the projection operator onto the subspace \(\mathrm{span}\{u_i\}\). Then \[
+<p><strong>Theorem:</strong> As in the previous theorem let \(X = \begin{pmatrix}x_1 & x_2 & \cdots & x_n \end{pmatrix}\) be the data matrix, \(W = XX^\top\) the covariance matrix, \(u_1, \dots , u_d\) the eigenvectors of \(W\) and \(\lambda_1, \dots , \lambda_d\) the eigenvalues. Let \(P_{u_i}: \mathbb{R}^d \to \mathbb{R}^d\) be the projection operator onto the subspace \(\mathrm{span}\{u_i\}\). Then \[
     \sum_{j=1}^m\|P_{u_i}x_j\|_2^2 = \lambda_i
 \] </p>
 
