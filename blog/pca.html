@@ -146,7 +146,7 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
 
 <p>Since \(\langle p_i&#39;, p_j&#39; \rangle = 0\) for \(i \neq j\) the features are independent, and the variance of \(p_i&#39;\) is the sum of the squares of its components \(\langle p_i&#39;, p_i&#39; \rangle = \lambda_i\).</p>
 
-<p>So the new features \(p_i&#39;\) are the eigenvectors of \(XX^\top\) and the eigenvalues \(\lambda_i\) are the variances of these features. It makes intuitive sense that the features with the largest variance are the most important, and the features with the smallest variance can be discarded. So we project the data onto the eigenvectors with the largest corresponding eigenvalues.</p>
+<p>So given a vector of pixels \(x\), we can convert \(x\) into a vector of new features \(x'\) by applying a change of basis, which is the same as projecting onto the eigenvectors of \(XX^\top\). Then the eigenvalues \(\lambda_i\) are the variances of the new features, so it makes intuitive sense that the features with the largest variance are the most important, while the features with the smallest variance can be discarded.</p>
 
 <h2 id="toc_4">IV.</h2>
 
