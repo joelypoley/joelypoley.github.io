@@ -50,7 +50,7 @@
 
 
 
-<p>Principal component analysis is used to reduce the the number of dimensions needed to represent your data.</p>
+<p>Principal component analysis is a form of <a href="https://en.wikipedia.org/wiki/Feature_engineering">feature engineering</a> that reduces the number of dimensions needed to represent your data. If a network has fewer inputs then there are less weights to train, which makes it easier and faster to train the model.</p>
 
 <p><img src="img/plot1.png" alt="scatter plot" class="inline_img"></p>
 
@@ -58,7 +58,7 @@
 
 <p><img src="img/plot2.png" alt="scatter plot" class="inline_img"></p>
 
-<p>Principal component analysis can help us understand the data better. Given the list of 2d points, \(x_1, x_2, \dots , x_n \in \mathbb{R}^2\) we first center the data by calculating the mean \(\overline{x} = \frac{1}{n}\sum_{i=1}^n x_i\) and replace each \(x_i\) with \(x_i - \overline{x}\). Now the data looks like this.</p>
+<p>The first step in principal component analysis is to center the data. Given the list of 2-d points, \(x_1, x_2, \dots , x_n \in \mathbb{R}^2\) we first center the data by calculating the mean \(\overline{x} = \frac{1}{n}\sum_{i=1}^n x_i\) and then replace each \(x_i\) with \(x_i - \overline{x}\). Now the data looks like this.</p>
 
 <p><img src="img/plot3.png" alt="scatter plot" class="inline_img"></p>
 
@@ -71,11 +71,9 @@ x_1 &amp; x_2 &amp;\cdots &amp; x_n \\
 \]
 And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em> \(\frac{1}{n-1}XX^\top\).</p>
 
-<p>What do the eigenvectors and eigenvalues of the covariance matrix tell us? Well let&#39;s plot the eigenvectors with the data.</p>
-
 <p><img src="img/plot4.png" alt="scatter plot" class="inline_img"></p>
 
-<p>The eigenvectors tell us the <em>direction</em> of the data. The first eigenvector has the same slope as the data and the second eigenvector is perpendicular to the first. Now let&#39;s scale each of the eigenvectors by its corresponding eigenvalue <sup id="a1"><a href="#f1">1</a></sup>.</p>
+<p>The eigenvectors tell us the <em>direction</em> of the data. The first eigenvector in the picture above has the same slope as the data and the second eigenvector is perpendicular to the first. Now let&#39;s scale each of the eigenvectors by its corresponding eigenvalue <sup id="a1"><a href="#f1">1</a></sup>.</p>
 
 <p><img src="img/plot5.png" alt="scatter plot" class="inline_img"></p>
 
@@ -83,11 +81,11 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
 
 <p><img src="img/plot6.png" alt="scatter plot" class="inline_img"></p>
 
-<p>We can now see that the eigenvalues tell us how spread out the data is in the direction of that particular eigenvalue. Thus we can reduce the dimension of the data by projecting onto the line given by the largest eigenvalue.</p>
+<p>The eigenvalues tell us how spread out the data is in the direction of that particular eigenvalue. Thus we can reduce the dimension of the data by projecting onto the line given by the largest eigenvalue.</p>
 
 <p><img src="img/plot7.png" alt="scatter plot" class="inline_img"></p>
 
-<p>The data is now one dimensional since it fits on a single line and each point has not moved too far from its original spot.</p>
+<p>The data is now one dimensional since it fits on a single line. Each point has not moved too far from its original spot, so these new points still represent the data well.</p>
 
 <p>In two dimensions this is the same as projecting onto the line of best fit, but this technique generalizes. If your data is \(n\)-dimensional then PCA lets you find the best \(m\)-dimensional subspace to project the data down onto; you just project your data onto the subspace spanned by the \(m\) eigenvectors with the largest eigenvalues. If \(m &lt;&lt; n\) this can compress your data a lot, and PCA guarantees that this \(m\) dimensional subspace is optimal, in the sense that it minimizes the mean squared error between the original data points and the projected data points.</p>
 
@@ -95,7 +93,7 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
 
 <p>The data in the plots above was generated using a random number generator. Let&#39;s try PCA on a real dataset.</p>
 
-<p>We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will, discard images of 2,3,4,5,6,7,8,9 and only look at images of 0 and 1 in the dataset. Below is an example of the images from MNIST.</p>
+<p>We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will discard images of 2,3,4,5,6,7,8,9 and only look at images of 0 and 1 in the dataset. Below are some examples of the images from MNIST.</p>
 
 <p><img src="img/plot8.png" alt="scatter plot" class="inline_img"></p>
 
@@ -113,7 +111,44 @@ And calculate the eigenvectors and eigenvalues of the <em>covariance matrix</em>
 
 <p>You can see that the zeros are clustered to the left, and the ones are clustered to the right. We could create a reasonable classifier by drawing a vertical line at \(x = - 250\), and all we did was linearly project the raw pixels down to a two dimensional subspace!</p>
 
+<p>We can project onto any number of dimensions. Here is the three dimensional projection.</p>
+
+<p><img src="img/plot11.png" alt="scatter plot" class="inline_img"></p>
+
 <h2 id="toc_3">III.</h2>
+
+<p>It's not obvious why the eigenvalues and eigenvectors of the covariance matrix have all these useful properties. There are proofs at the end of the post, but they're not particularly enlightening. Thankfully there's a more intuitive way of thinking about it.</p>
+
+<p>Continuing with the MNIST example, let \(p_1\) be the vector where the \(i\)-th entry is the first pixel in the \(i\)-th image. Simlarly let \(p_2, p_3, \dots , p_{784}\) be the vectors consisting of the 2nd, 3rd ... , 784th pixels across all images. Then 
+\[
+    XX^\top = 
+    \begin{pmatrix}
+    \langle p_1, p_1 \rangle &amp; \langle p_1, p_2 \rangle &amp; \cdots &amp; \langle p_1, p_{784} \rangle \\
+    \langle p_2, p_1 \rangle &amp; \langle p_2, p_2 \rangle &amp; \cdots &amp; \langle p_2, p_{784} \rangle \\
+    \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+    \langle p_{784}, p_1 \rangle &amp; \langle p_{784}, p_2 \rangle &amp; \cdots &amp; \langle p_{784}, p_{784} \rangle \\
+    \end{pmatrix}.
+\]</p>
+
+<p>The \(ij\)-th entry \(\langle p_i, p_j \rangle\) measures how correlated the \(i\)-th and \(j\)-th pixels are.</p>
+
+<p>This matrix is positive semidefinite so there is an orthonormal change of basis which diagonalizes it.
+\[XX^\top \sim \begin{pmatrix}
+\lambda_1 &amp; 0 &amp; \dots &amp; 0 \\
+0 &amp; \lambda_2 &amp; \dots &amp; 0 \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+0 &amp; 0 &amp; \dots &amp; \lambda_n
+\end{pmatrix}.
+\]
+</p>
+
+<p>We can view the change of basis as creating new features \(p_1&#39;, p_2&#39;, \dots , p_{748}&#39;\) from the original pixels. And the diagonal matrix is the covariance matrix for these new features.</p>
+
+<p>Since \(\langle p_i&#39;, p_j&#39; \rangle = 0\) for \(i \neq j\) the features are independent, and the variance of \(p_i&#39;\) is \(\langle p_i&#39;, p_i&#39; \rangle = \lambda_i\).</p>
+
+<p>So given a vector of pixels \(x\), we can convert \(x\) into a vector of new features \(x'\) by applying a change of basis. Then the eigenvalues \(\lambda_i\) are the variances of the new features, it seems reasonable that the features with the largest variance are the most important, while the features with the smallest variance can be discarded.</p>
+
+<h2 id="toc_4">IV.</h2>
 
 <p>Now that we have some intuition, the preceding discussion can be formalized into a theorem.</p>
 
@@ -129,7 +164,7 @@ x_1 &amp; x_2 &amp;\cdots &amp; x_n \\
 Let \(W = XX^\top\) (the \(\frac{1}{n-1}\) factor from before does not affect the eigenvectors or order of the eigenvalues).
 Then \(W\) is <a href="https://en.wikipedia.org/wiki/Positive-definite_matrix#Positive_semidefinite">positive semidefinite</a> and hence has eigenvectors \(u_1, \dots , u_d\) which form an <a href="https://en.wikipedia.org/wiki/Orthonormal_basis">orthonormal basis</a> for \(\mathbb{R}^d\).
 Let \(\lambda_1, \dots , \lambda_d\) be the corresponding eigenvalues and without loss of generality assume \(\lambda_1 \geq \lambda_2 \cdots \geq \lambda_d\).
-The <em>projection error</em> for \(x_i\) onto a subspace \(V \subset \mathbb{R}^d\) is defined as \(\|x_i - P_Vx_i\|_2^2\) where \(P_V:\mathbb{R}_d \to \mathbb{R}_d\) is the projection operator.
+The <em>projection error</em> for \(x_i\) onto a subspace \(V \subset \mathbb{R}^d\) is defined as \(\|x_i - P_Vx_i\|_2^2\) where \(P_V:\mathbb{R}^d \to \mathbb{R}^d\) is the projection operator.
 Then for any positive integer \(m &lt; d\) the subspace \(U_m := \operatorname{span}\{u_1, \dots , u_m\}\) minimizes the sum of the projection errors. In symbols,
 \[
 \sum_{i=1}^n \|x_i - P_{U_m}x_i\|_2^2 = \min_{\substack{V \subset \mathbb{R}^d \\ \operatorname{dim}V = m}} \sum_{i=1}^n \|x_i - P_Vx_i\|_2^2.
@@ -159,12 +194,12 @@ We now rewrite the error using matrix algebra
 &amp;= \| X- P_VX\|_F^2 \\
 &amp;=\tr\left(( X- P_VX)( X- P_VX)^\top\right) &amp; (\|A \|_F^2 = \tr(A^\top A)) \\
 &amp;=\tr\left(( X- P_VX)( X^\top - X^\top P_V^\top)\right) \\
-&amp;=\tr\left(XX^\top - XX^\top P_V^\top - P_VXX^\top - P_VXX^\top P_V^\top \right) \\
-&amp;=\tr\left(W- W P_V^\top - P_VW - P_VW P_V^\top \right) &amp; (W = XX^\top)\\
-&amp;=\tr\left(W- W P_V - P_VW - P_VW P_V \right) &amp; (P_V = P_V^\top )\\
-&amp;=\tr(W)- \tr(W P_V) - \tr(P_VW) - \tr(P_VW P_V ) \\
-&amp;=\tr(W)- \tr(P_VW ) - \tr(P_VW) - \tr(P_VW) &amp; (\tr(AB) = \tr(BA) \text{ and } P_V^2 = P_V)\\
-&amp;=\tr(W)- 3\tr(P_VW).
+&amp;=\tr\left(XX^\top - XX^\top P_V^\top - P_VXX^\top + P_VXX^\top P_V^\top \right) \\
+&amp;=\tr\left(W- W P_V^\top - P_VW + P_VW P_V^\top \right) &amp; (W = XX^\top)\\
+&amp;=\tr\left(W- W P_V - P_VW + P_VW P_V \right) &amp; (P_V = P_V^\top )\\
+&amp;=\tr(W)- \tr(W P_V) - \tr(P_VW) + \tr(P_VW P_V ) \\
+&amp;=\tr(W)- \tr(P_VW ) - \tr(P_VW) + \tr(P_VW) &amp; (\tr(AB) = \tr(BA) \text{ and } P_V^2 = P_V)\\
+&amp;=\tr(W)- \tr(P_VW).
 \end{align}
 \]</p>
 
@@ -176,8 +211,8 @@ so
 \[
 \begin{align}\newcommand{\tr}{\mathrm{tr}}
     \tr(P_VW)
-    &amp;= \tr(\sum_{i = 1}^m v_iv_i^\top W) \\
-    &amp;= \sum_{i=1}^m \tr\left(v_iv_i^\top w\right) \\
+    &amp;= \tr\left(\sum_{i = 1}^m v_iv_i^\top W \right) \\
+    &amp;= \sum_{i=1}^m \tr\left(v_iv_i^\top W\right) \\
     &amp;= \sum_{i=1}^m \tr(v_i^\top W v_i) &amp; (\tr(AB) = \tr(BA)).
 \end{align}
 \]</p>
@@ -218,11 +253,11 @@ is the \(i\)-th standard basis vector. Thus
 \end{align}
 \]</p>
 
-<p>Therefore it suffices to show that \(\mathrm{tr}(P_VW) \leq \sum_{i=1}^m \lambda_i\) for all rank \(m\) subspaces \(V\).</p>
+<p>Therefore it suffices to show that \(\mathrm{tr}(P_VW) \leq \sum_{i=1}^m \lambda_i\) for all dimension \(m\) subspaces \(V\).</p>
 
 <p>We will show this is true in the case \(m = 2\), i.e. \(\mathrm{tr}(P_VW) \leq \lambda_1 + \lambda_2\) when \(V\) is 2 dimensional. The case \(m &gt; 2\) uses the same argument but it is more notationally heavy. Let \(\alpha = U^\top v_1 \in \mathbb{R}^d\) and \(\beta =U^\top v_2 \in \mathbb{R}^d\). Note that since \(U\) is unitary \(\|\alpha\|_2^2 = \|\beta\|_2^2 = 1\) and \(\langle \alpha, \beta \rangle = 0\).</p>
 
-<p>The first step is to show that \(\alpha_i^2 + \beta_i^2 \leq 1\) for all \(i\). Let \(e_i = (0, \dots , 0, 1, 0, \dots , 0)\) be the \(i\)-th standard basis vector. Since \(\alpha\) and \(\beta\) are orthogonal, the projection of \(e_i\) onto \(\operatorname{span}\{\alpha, \beta \}\) is given by
+<p>The first step is to show that \(\alpha_i^2 + \beta_i^2 \leq 1\) for all \(i\). Let \(e_i = (0, \dots , 0, 1, 0, \dots , 0)\) be the \(i\)-th standard basis vector. Since \(\alpha\) and \(\beta\) are orthogonal and have length 1, the projection of \(e_i\) onto \(\operatorname{span}\{\alpha, \beta \}\) is given by
 \[\hat{e}_i = \langle e_i, \alpha \rangle \alpha + \langle e_i, \beta \rangle \beta = \alpha_i \alpha + \beta_i \beta .\]
 Then
 \[ \alpha_i^2 + \beta_i^2 = \|\hat{e_i}\|_2^2 \leq \|e_i\|_2^2 = 1 \]
@@ -235,9 +270,31 @@ since a projected vector always has length less than or equal to the original ve
 and we know that
 \[\alpha_i^2 + \beta_i^2 \leq 1 \text{ and } \sum_{i=1}^d(\alpha_i^2 + \beta_i^2) = 2 .\]</p>
 
-<p>The sum \(\sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2)\) is maximized when when the first and second coefficient are as large as possible, i.e. when \(\alpha_1^2 + \beta_1^2 = \alpha_2^2 + \beta_2^2 = 1\). But then the second condition implies that \(\alpha_i^2 + \beta_i^2 = 0\) for \(i &gt; 2\). Thus
+<p>The eigenvalues of a positive semidefinite matrix are nonnegative so the sum \(\sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2)\) is maximized when when the first and second coefficient are as large as possible, i.e. when \(\alpha_1^2 + \beta_1^2 = \alpha_2^2 + \beta_2^2 = 1\). But then the second condition implies that \(\alpha_i^2 + \beta_i^2 = 0\) for \(i &gt; 2\). Thus
 \[ \mathrm{tr}(P_VW) = \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \leq \lambda_1 + \lambda_2. \]
 \(\square\)</p>
+
+We also need to prove that the size of the eigenvalue is proportional to the variance in the direction of the corresponding eigenvector.
+
+<p><strong>Theorem:</strong> As in the previous theorem let \(X = \begin{pmatrix}x_1 & x_2 & \cdots & x_n \end{pmatrix}\) be the data matrix, \(W = XX^\top\) the covariance matrix, \(u_1, \dots , u_d\) the eigenvectors of \(W\) and \(\lambda_1, \dots , \lambda_d\) the eigenvalues. Let \(P_{u_i}: \mathbb{R}^d \to \mathbb{R}^d\) be the projection operator onto the subspace \(\mathrm{span}\{u_i\}\). Then \[
+    \sum_{j=1}^m\|P_{u_i}x_j\|_2^2 = \lambda_i
+\] </p>
+
+<p><em>Proof:</em> </p>
+
+<p>
+The working is similar to the previous proof so I'll omit some steps.
+\[
+\begin{align}
+\sum_{j=1}^m\|P_{u_i}x_j\|_2^2 
+&amp;= \|u_iu_i^\top X\|_F^2 \\
+&amp;= \mathrm{tr}((u_iu_i^\top X)(u_iu_i^\top X)^\top)  \\
+&amp;= \mathrm{tr}(u_i^\top W u_i)  \\
+&amp;=  \mathrm{tr}((U^\top u_i)^\top D (U^\top u_i) \\
+&amp;= \lambda_i .
+\end{align}
+\] 
+</p>
 
 <hr>
 
