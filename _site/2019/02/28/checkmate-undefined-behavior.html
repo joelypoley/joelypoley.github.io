@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.5.0 -->
+<title>Checkmate, undefined behavior | Joel Laity</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Checkmate, undefined behavior" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Undefined behavior is the bane of C and C++ programmers. The compiler can choose to do whatever it wants if a program has undefined behavior. This is normally not a good thing, but I recently wrote some code with some undefined behavior and amazingly the compiler chose to do exactly what I had intended, not what I told it to do." />
+<meta property="og:description" content="Undefined behavior is the bane of C and C++ programmers. The compiler can choose to do whatever it wants if a program has undefined behavior. This is normally not a good thing, but I recently wrote some code with some undefined behavior and amazingly the compiler chose to do exactly what I had intended, not what I told it to do." />
+<link rel="canonical" href="http://localhost:4000/2019/02/28/checkmate-undefined-behavior.html" />
+<meta property="og:url" content="http://localhost:4000/2019/02/28/checkmate-undefined-behavior.html" />
+<meta property="og:site_name" content="Joel Laity" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-02-28T00:00:00+13:00" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"Checkmate, undefined behavior","url":"http://localhost:4000/2019/02/28/checkmate-undefined-behavior.html","dateModified":"2019-02-28T00:00:00+13:00","datePublished":"2019-02-28T00:00:00+13:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2019/02/28/checkmate-undefined-behavior.html"},"description":"Undefined behavior is the bane of C and C++ programmers. The compiler can choose to do whatever it wants if a program has undefined behavior. This is normally not a good thing, but I recently wrote some code with some undefined behavior and amazingly the compiler chose to do exactly what I had intended, not what I told it to do.","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Joel Laity" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Joel Laity</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Checkmate, undefined behavior</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-02-28T00:00:00+13:00" itemprop="datePublished">Feb 28, 2019
+      </time></p>
+      
+       <!-- Mathjax Support -->
+<script type="text/javascript" async
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+      
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Undefined behavior is the bane of C and C++ programmers. The compiler can choose to do whatever it wants if a program has undefined behavior. This is normally not a good thing, but I recently wrote some code with some undefined behavior and amazingly the compiler chose to do exactly what I had intended, not what I told it to do.</p>
+
+<p>I have spent the last week working on a <a href="https://github.com/joelypoley/pawn_grabber">chess engine</a> in C++. Most chess engines take advantage of the convenient coincidence that the number of squares on a chess board, 64, is the same as the word size on modern processors. So, you can do things like store the location of all the white pawns with a single 64 bit integer: you just set the i-th bit to 1 if there is a white pawn on the i-th square. This technique allows you to do neat tricks, such as move all pieces up one square by left shifting the integer by 8.</p>
+
+<p>I wrote a simple utility function that takes the name of the square as a string and returns the corresponding 64 bit integer. Chess players use a simple naming convention for the squares on a chessboard: the rows are labeled 1-8 and the columns are labelled a-h, so the square in the bottom left hand corner is the a1 square.</p>
+
+<p><img src="/assets/algebraic_notation.png" alt="chessboard" /></p>
+
+<p>Here is (roughly) how I implemented my string to 64 bit integer function. Can you see what’s wrong with it?</p>
+
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="c1">// At the top of the file.</span>
+<span class="k">constexpr</span> <span class="kt">int</span> <span class="n">board_size</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+
+<span class="c1">// algebraic_square would be one of a1, a2, ..., h7, h8.</span>
+<span class="kt">uint64_t</span> <span class="nf">str_to_square</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">algebraic_square</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">const</span> <span class="kt">char</span> <span class="n">column</span> <span class="o">=</span> <span class="n">algebraic_square</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+  <span class="k">const</span> <span class="kt">char</span> <span class="n">row</span> <span class="o">=</span> <span class="n">algebraic_square</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+  <span class="k">const</span> <span class="kt">int</span> <span class="n">column_index</span> <span class="o">=</span> <span class="n">column</span> <span class="o">-</span> <span class="sc">'a'</span><span class="p">;</span>
+  <span class="k">const</span> <span class="kt">int</span> <span class="n">row_index</span> <span class="o">=</span> <span class="n">row</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="k">return</span> <span class="kt">uint64_t</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="p">((</span><span class="n">row_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">board_size</span> <span class="o">-</span> <span class="n">column_index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>I forgot to put quotes around the <code class="highlighter-rouge">1</code> in the line <code class="highlighter-rouge">const int row_index = row - 1;</code>! Instead of subtracting the character <code class="highlighter-rouge">'1'</code>, I subtracted the integer <code class="highlighter-rouge">1</code>. Since the ascii encoding of the character <code class="highlighter-rouge">'1'</code> is 49, the <code class="highlighter-rouge">row_index</code> is always off by 48.</p>
+
+<p>This bug disturbed me, not because bugs like this are so unusual, but because none of my tests caught this and I only discovered the bug when I was tidying up some of the surrounding code. I was left shifting a 64 bit integer by at least 384 every time I called this function and yet it seemingly caused none of my tests to fail. After some investigation I concluded that for <em>every</em> single square on the chess board my code gave the right answer. This was unexpected to say the least.</p>
+
+<p>I was already aware that left shifting off the end of a <em>signed</em> integer is undefined behavior but I thought that left shifting off the end of unsigned integers was perfectly well defined, the most significant bits just get discarded. From <a href="https://en.cppreference.com/w/">cpprefence.com</a>:</p>
+
+<blockquote>
+  <blockquote>
+    <p>For unsigned a, the value of a « b is the value of a * 2b, reduced modulo 2N where N is the number of bits in the return type (that is, bitwise left shift is performed and the bits that get shifted out of the destination type are discarded).</p>
+  </blockquote>
+</blockquote>
+
+<p>According to cppreference, my function should simply push the single set bit <code class="highlighter-rouge">unit64_t(1)</code> off the end and return 0 every time. Since <code class="highlighter-rouge">str_to_square</code> clearly wasn’t doing this, my next step was to run my program with the <a href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">UndefinedBehaviorSanitizer</a>. I got the following warning.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>runtime error: shift exponent 384 is too large for 64-bit type 'uint64_t' (aka 'unsigned long')
+</code></pre></div></div>
+
+<p>Which confirmed that I was indeed invoking undefined behavior.</p>
+
+<p>After consulting the <a href="http://www.open-std.org/Jtc1/sc22/wg21/docs/papers/2014/n4296.pdf">C++ standard</a> (something I had been trying to avoid doing) I still did not understand. Paragraph 5.8.2 says:</p>
+
+<blockquote>
+  <blockquote>
+    <p>5.8.2 The value of E1 « E2 is E1 left-shifted E2 bit positions; vacated bits are zero-filled. If E1 has an unsigned type, the value of the result is E1 × 2E2, reduced modulo one more than the maximum value representable in the result type. Otherwise, if E1 has a signed type and non-negative value, and E1 × 2E2 is representable in the corresponding unsigned type of the result type, then that value, converted to the result type, is the resulting value; otherwise, the behavior is undefined.</p>
+  </blockquote>
+</blockquote>
+
+<p>This paragraph only mentions undefined behavior for signed integers, but I was using unsigned integers so it shouldn’t affect me.</p>
+
+<p>I was just about to give up. It was getting late, and although it was a remarkable coincidence that forgetting the quote marks didn’t affect the behavior of my program, I had already fixed the bug. Then I noticed the paragraph above 5.8.2:</p>
+
+<blockquote>
+  <blockquote>
+    <p>5.8.1. The shift operators « and » group left-to-right. … The behavior is undefined if the right operand is negative, or greater than or equal to the length in bits of the promoted left operand.</p>
+  </blockquote>
+</blockquote>
+
+<p>I finally had my answer! It is undefined behavior to shift a 64 bit integer by 64 or greater.</p>
+
+<p>All bets are off once your program has undefined behavior, but it was remarkable that my program was seemingly doing what I intended it to do, rather than what I had actually told it to do. I thought that left shifting by more than the “length in bits of the promoted left operand” would result in zero, but instead I was getting the correct answer each time.</p>
+
+<p>To see what was going on I copy and pasted my function into <a href="https://godbolt.org/z/z1Vobs">compiler explorer</a>, turned optimizations up to <code class="highlighter-rouge">-O3</code> so the output was less noisy, and got:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>str_to_square(std::basic_string_view&lt;char, std::char_traits&lt;char&gt; &gt;): # @str_to_square(std::basic_string_view&lt;char, std::char_traits&lt;char&gt; &gt;)
+        movzx   eax, byte ptr [rsi]
+        movzx   ecx, byte ptr [rsi + 1]
+        mov     edx, 96
+        sub     edx, eax
+        lea     ecx, [rdx + 8*rcx]
+        mov     eax, 1
+        shl     rax, cl
+        ret
+</code></pre></div></div>
+
+<p>The left shift is being done by the <code class="highlighter-rouge">shl</code> instruction. Helpfully, if you right click on an assembly instruction in compiler explorer it points you to the documentation for that instruction, which said:</p>
+
+<blockquote>
+  <blockquote>
+    <p>The destination operand can be a register or a memory location. The count operand can be an immediate value or the CL register. The count is masked to 5 bits (or 6 bits if in 64-bit mode and REX.W is used).</p>
+  </blockquote>
+</blockquote>
+
+<p>I finally had my answer! Masking by 6 bits is the same as reducing modulo 64 and by coincidence, <code class="highlighter-rouge">((row - 1) + 1) * board_size</code> is the same as the correct value <code class="highlighter-rouge">(row - '1' + 1) * board_size</code> modulo 64 (because <code class="highlighter-rouge">(('1' - 1) * board_size) % 64 == 0</code>).</p>
+
+<p>The undefined behavior gods must have been smiling down on me.</p>
+
+  </div><a class="u-url" href="/2019/02/28/checkmate-undefined-behavior.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Joel Laity</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Joel Laity</li><li><a class="u-email" href="mailto:joels_public_email@gmail.com">joels_public_email@gmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/joelypoley"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">joelypoley</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-03-01T17:42:09+13:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Joel Laity</title><subtitle></subtitle><entry><title type="html">Checkmate, undefined behavior</title><link href="http://localhost:4000/2019/02/28/checkmate-undefined-behavior.html" rel="alternate" type="text/html" title="Checkmate, undefined behavior" /><published>2019-02-28T00:00:00+13:00</published><updated>2019-02-28T00:00:00+13:00</updated><id>http://localhost:4000/2019/02/28/checkmate-undefined-behavior</id><content type="html" xml:base="http://localhost:4000/2019/02/28/checkmate-undefined-behavior.html">&lt;p&gt;Undefined behavior is the bane of C and C++ programmers. The compiler can choose to do whatever it wants if a program has undefined behavior. This is normally not a good thing, but I recently wrote some code with some undefined behavior and amazingly the compiler chose to do exactly what I had intended, not what I told it to do.&lt;/p&gt;
+
+&lt;p&gt;I have spent the last week working on a &lt;a href=&quot;https://github.com/joelypoley/pawn_grabber&quot;&gt;chess engine&lt;/a&gt; in C++. Most chess engines take advantage of the convenient coincidence that the number of squares on a chess board, 64, is the same as the word size on modern processors. So, you can do things like store the location of all the white pawns with a single 64 bit integer: you just set the i-th bit to 1 if there is a white pawn on the i-th square. This technique allows you to do neat tricks, such as move all pieces up one square by left shifting the integer by 8.&lt;/p&gt;
+
+&lt;p&gt;I wrote a simple utility function that takes the name of the square as a string and returns the corresponding 64 bit integer. Chess players use a simple naming convention for the squares on a chessboard: the rows are labeled 1-8 and the columns are labelled a-h, so the square in the bottom left hand corner is the a1 square.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/algebraic_notation.png&quot; alt=&quot;chessboard&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Here is (roughly) how I implemented my string to 64 bit integer function. Can you see what’s wrong with it?&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c--&quot; data-lang=&quot;c++&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// At the top of the file.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;constexpr&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;board_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// algebraic_square would be one of a1, a2, ..., h7, h8.&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;str_to_square&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;string_view&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;algebraic_square&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;algebraic_square&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;algebraic_square&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column_index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;sc&quot;&gt;'a'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row_index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row_index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;board_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column_index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;I forgot to put quotes around the &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt; in the line &lt;code class=&quot;highlighter-rouge&quot;&gt;const int row_index = row - 1;&lt;/code&gt;! Instead of subtracting the character &lt;code class=&quot;highlighter-rouge&quot;&gt;'1'&lt;/code&gt;, I subtracted the integer &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;. Since the ascii encoding of the character &lt;code class=&quot;highlighter-rouge&quot;&gt;'1'&lt;/code&gt; is 49, the &lt;code class=&quot;highlighter-rouge&quot;&gt;row_index&lt;/code&gt; is always off by 48.&lt;/p&gt;
+
+&lt;p&gt;This bug disturbed me, not because bugs like this are so unusual, but because none of my tests caught this and I only discovered the bug when I was tidying up some of the surrounding code. I was left shifting a 64 bit integer by at least 384 every time I called this function and yet it seemingly caused none of my tests to fail. After some investigation I concluded that for &lt;em&gt;every&lt;/em&gt; single square on the chess board my code gave the right answer. This was unexpected to say the least.&lt;/p&gt;
+
+&lt;p&gt;I was already aware that left shifting off the end of a &lt;em&gt;signed&lt;/em&gt; integer is undefined behavior but I thought that left shifting off the end of unsigned integers was perfectly well defined, the most significant bits just get discarded. From &lt;a href=&quot;https://en.cppreference.com/w/&quot;&gt;cpprefence.com&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;blockquote&gt;
+    &lt;p&gt;For unsigned a, the value of a « b is the value of a * 2b, reduced modulo 2N where N is the number of bits in the return type (that is, bitwise left shift is performed and the bits that get shifted out of the destination type are discarded).&lt;/p&gt;
+  &lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;According to cppreference, my function should simply push the single set bit &lt;code class=&quot;highlighter-rouge&quot;&gt;unit64_t(1)&lt;/code&gt; off the end and return 0 every time. Since &lt;code class=&quot;highlighter-rouge&quot;&gt;str_to_square&lt;/code&gt; clearly wasn’t doing this, my next step was to run my program with the &lt;a href=&quot;https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html&quot;&gt;UndefinedBehaviorSanitizer&lt;/a&gt;. I got the following warning.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;runtime error: shift exponent 384 is too large for 64-bit type 'uint64_t' (aka 'unsigned long')
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Which confirmed that I was indeed invoking undefined behavior.&lt;/p&gt;
+
+&lt;p&gt;After consulting the &lt;a href=&quot;http://www.open-std.org/Jtc1/sc22/wg21/docs/papers/2014/n4296.pdf&quot;&gt;C++ standard&lt;/a&gt; (something I had been trying to avoid doing) I still did not understand. Paragraph 5.8.2 says:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;blockquote&gt;
+    &lt;p&gt;5.8.2 The value of E1 « E2 is E1 left-shifted E2 bit positions; vacated bits are zero-filled. If E1 has an unsigned type, the value of the result is E1 × 2E2, reduced modulo one more than the maximum value representable in the result type. Otherwise, if E1 has a signed type and non-negative value, and E1 × 2E2 is representable in the corresponding unsigned type of the result type, then that value, converted to the result type, is the resulting value; otherwise, the behavior is undefined.&lt;/p&gt;
+  &lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This paragraph only mentions undefined behavior for signed integers, but I was using unsigned integers so it shouldn’t affect me.&lt;/p&gt;
+
+&lt;p&gt;I was just about to give up. It was getting late, and although it was a remarkable coincidence that forgetting the quote marks didn’t affect the behavior of my program, I had already fixed the bug. Then I noticed the paragraph above 5.8.2:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;blockquote&gt;
+    &lt;p&gt;5.8.1. The shift operators « and » group left-to-right. … The behavior is undefined if the right operand is negative, or greater than or equal to the length in bits of the promoted left operand.&lt;/p&gt;
+  &lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I finally had my answer! It is undefined behavior to shift a 64 bit integer by 64 or greater.&lt;/p&gt;
+
+&lt;p&gt;All bets are off once your program has undefined behavior, but it was remarkable that my program was seemingly doing what I intended it to do, rather than what I had actually told it to do. I thought that left shifting by more than the “length in bits of the promoted left operand” would result in zero, but instead I was getting the correct answer each time.&lt;/p&gt;
+
+&lt;p&gt;To see what was going on I copy and pasted my function into &lt;a href=&quot;https://godbolt.org/z/z1Vobs&quot;&gt;compiler explorer&lt;/a&gt;, turned optimizations up to &lt;code class=&quot;highlighter-rouge&quot;&gt;-O3&lt;/code&gt; so the output was less noisy, and got:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;str_to_square(std::basic_string_view&amp;lt;char, std::char_traits&amp;lt;char&amp;gt; &amp;gt;): # @str_to_square(std::basic_string_view&amp;lt;char, std::char_traits&amp;lt;char&amp;gt; &amp;gt;)
+        movzx   eax, byte ptr [rsi]
+        movzx   ecx, byte ptr [rsi + 1]
+        mov     edx, 96
+        sub     edx, eax
+        lea     ecx, [rdx + 8*rcx]
+        mov     eax, 1
+        shl     rax, cl
+        ret
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The left shift is being done by the &lt;code class=&quot;highlighter-rouge&quot;&gt;shl&lt;/code&gt; instruction. Helpfully, if you right click on an assembly instruction in compiler explorer it points you to the documentation for that instruction, which said:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;blockquote&gt;
+    &lt;p&gt;The destination operand can be a register or a memory location. The count operand can be an immediate value or the CL register. The count is masked to 5 bits (or 6 bits if in 64-bit mode and REX.W is used).&lt;/p&gt;
+  &lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I finally had my answer! Masking by 6 bits is the same as reducing modulo 64 and by coincidence, &lt;code class=&quot;highlighter-rouge&quot;&gt;((row - 1) + 1) * board_size&lt;/code&gt; is the same as the correct value &lt;code class=&quot;highlighter-rouge&quot;&gt;(row - '1' + 1) * board_size&lt;/code&gt; modulo 64 (because &lt;code class=&quot;highlighter-rouge&quot;&gt;(('1' - 1) * board_size) % 64 == 0&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;The undefined behavior gods must have been smiling down on me.&lt;/p&gt;</content><author><name></name></author><summary type="html">Undefined behavior is the bane of C and C++ programmers. The compiler can choose to do whatever it wants if a program has undefined behavior. This is normally not a good thing, but I recently wrote some code with some undefined behavior and amazingly the compiler chose to do exactly what I had intended, not what I told it to do.</summary></entry><entry><title type="html">Principal component analysis: pictures, code and proofs</title><link href="http://localhost:4000/2018/10/18/pca.html" rel="alternate" type="text/html" title="Principal component analysis: pictures, code and proofs" /><published>2018-10-18T00:00:00+13:00</published><updated>2018-10-18T00:00:00+13:00</updated><id>http://localhost:4000/2018/10/18/pca</id><content type="html" xml:base="http://localhost:4000/2018/10/18/pca.html">&lt;p&gt;&lt;small&gt;The code used to generate the plots for this post can be found &lt;a href=&quot;https://github.com/joelypoley/joelypoley.github.io/blob/master/notebooks/pca.ipynb&quot;&gt;here&lt;/a&gt;.&lt;/small&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;i&quot;&gt;I.&lt;/h2&gt;
+
+&lt;p&gt;Principal component analysis is a form of &lt;a href=&quot;https://en.wikipedia.org/wiki/Feature_engineering&quot;&gt;feature engineering&lt;/a&gt; that reduces the number of dimensions needed to represent your data. If a network has fewer inputs then there are less weights to train, which makes it easier and faster to train the model.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot1.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The data above is two dimensional, but it is “almost” one dimensional in the sense that every point is close to a line.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot2.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The first step in principal component analysis is to center the data. Given the list of 2d points, \(x_1, x_2, \dots , x_n \in \mathbb{R}^2\) we first center the data by calculating the mean \(\overline{x} = \frac{1}{n}\sum_{i=1}^n x_i\) and replacing each \(x_i\) with \(x_i - \overline{x}\). Now the data looks like this.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot3.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We then put the data in a matrix.
+&lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
+X = \begin{pmatrix}
+| &amp; | &amp;  &amp; | \\
+x_1 &amp; x_2 &amp;\cdots &amp; x_n \\
+| &amp; | &amp;  &amp; |\end{pmatrix}. %]]&gt;&lt;/script&gt;
+And calculate the eigenvectors and eigenvalues of the &lt;em&gt;covariance matrix&lt;/em&gt; &lt;script type=&quot;math/tex&quot;&gt;\frac{1}{n-1}XX^\top&lt;/script&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot4.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The eigenvectors tell us the &lt;em&gt;direction&lt;/em&gt; of the data. The first eigenvector in the picture above has the same slope as the data and the second eigenvector is perpendicular to the first. Now let’s scale each of the eigenvectors by its corresponding eigenvalue &lt;sup id=&quot;a1&quot;&gt;&lt;a href=&quot;#f1&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot5.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;And draw an ellipse around the eigenvectors.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot6.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The eigenvalues tell us how spread out the data is in the direction of that particular eigenvalue. Thus we can reduce the dimension of the data by projecting onto the line given by the largest eigenvalue.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot7.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The data is now one dimensional since it fits on a single line. Each point has not moved too far from its original spot, so these new points still represent the data well.&lt;/p&gt;
+
+&lt;p&gt;In two dimensions this is the same as projecting onto the line of best fit, but this technique generalizes. If your data is \(n\)-dimensional then PCA lets you find the best \(m\)-dimensional subspace to project the data down onto; you just project your data onto the subspace spanned by the \(m\) eigenvectors with the largest eigenvalues. If \(m « n\) this can compress your data a lot, and PCA guarantees that this \(m\) dimensional subspace is optimal, in the sense that it minimizes the mean squared error between the original data points and the projected data points.&lt;/p&gt;
+
+&lt;h1 id=&quot;ii&quot;&gt;II.&lt;/h1&gt;
+
+&lt;p&gt;The data in the plots above was generated using a random number generator. Let’s try PCA on a real dataset.&lt;/p&gt;
+
+&lt;p&gt;We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will discard images of 2,3,4,5,6,7,8,9 and only look at images of 0 and 1 in the dataset. Below are some examples of the images from MNIST.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot8.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;To process the images we will:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Flatten each image into a &lt;script type=&quot;math/tex&quot;&gt;784 = 28\times 28&lt;/script&gt; vector.&lt;/li&gt;
+  &lt;li&gt;Use PCA to project each 784-dimensional vector to a 2-dimensional vector.&lt;/li&gt;
+  &lt;li&gt;Plot the 2 dimensional vectors, with images of ‘0’ in red and images of ‘1’ in blue.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The result looks like this.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot9.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can see that the zeros are clustered to the left, and the ones are clustered to the right. We could create a reasonable classifier by drawing a vertical line at \(x = - 250\), and all we did was linearly project the raw pixels down to a two dimensional subspace!&lt;/p&gt;
+
+&lt;p&gt;We can project onto any number of dimensions. Here is the three dimensional projection.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/plot11.png&quot; alt=&quot;scatter plot&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;iii&quot;&gt;III.&lt;/h2&gt;
+
+&lt;p&gt;It’s not obvious why the eigenvalues and eigenvectors of the covariance matrix have all these useful properties. There are proofs at the end of the post, but they’re not particularly enlightening. Thankfully there’s a more intuitive way of thinking about it.&lt;/p&gt;
+
+&lt;p&gt;Continuing with the MNIST example, let \(p_1\) be the vector where the \(i\)-th entry is the first pixel in the \(i\)-th image. Simlarly let \(p_2, p_3, \dots , p_{784}\) be the vectors consisting of the 2nd, 3rd … , 784th pixels across all images. Then&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+XX^\top = 
+    \begin{pmatrix}
+    \langle p_1, p_1 \rangle &amp; \langle p_1, p_2 \rangle &amp; \cdots &amp; \langle p_1, p_{784} \rangle \\
+    \langle p_2, p_1 \rangle &amp; \langle p_2, p_2 \rangle &amp; \cdots&amp;  \langle p_2, p_{784} \rangle \\
+    \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+    \langle p_{784}, p_1 \rangle &amp; \langle p_{784}, p_2 \rangle &amp; \cdots &amp; \langle p_{784}, p_{784} \rangle \\
+    \end{pmatrix}. %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;We can view the change of basis as creating new features \(p_1’, p_2’, \dots , p_{748}’\) from the original pixels. And the diagonal matrix is the covariance matrix for these new features.&lt;/p&gt;
+
+&lt;p&gt;Since \(\langle p_i’, p_j’ \rangle = 0\) for \(i \neq j\) the features are independent, and the variance of \(p_i’\) is \(\langle p_i’, p_i’ \rangle = \lambda_i\).&lt;/p&gt;
+
+&lt;p&gt;So given a vector of pixels \(x\), we can convert \(x\) into a vector of new features \(x’\) by applying a change of basis. Then the eigenvalues \(\lambda_i\) are the variances of the new features, it seems reasonable that the features with the largest variance are the most important, while the features with the smallest variance can be discarded.&lt;/p&gt;
+
+&lt;h2 id=&quot;iv&quot;&gt;IV.&lt;/h2&gt;
+
+&lt;p&gt;Now that we have some intuition, the preceding discussion can be formalized into a theorem.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Theorem:&lt;/strong&gt; Let \(x_1, \dots , x_n \in \mathbb{R}^d\) be a sequence of data points. 
+Let&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+X = \begin{pmatrix}
+| &amp; | &amp;  &amp; | \\
+x_1 &amp; x_2 &amp;\cdots &amp; x_n \\
+| &amp; | &amp;  &amp; |\end{pmatrix} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;be the \(d \times n\) matrix where each column is a data point.
+Let \(W = XX^\top\) (the \(\frac{1}{n-1}\) factor from before does not affect the eigenvectors or order of the eigenvalues).
+Then \(W\) is &lt;a href=&quot;https://en.wikipedia.org/wiki/Positive-definite_matrix#Positive_semidefinite&quot;&gt;positive semidefinite&lt;/a&gt; and hence has eigenvectors \(u_1, \dots , u_d\) which form an &lt;a href=&quot;https://en.wikipedia.org/wiki/Orthonormal_basis&quot;&gt;orthonormal basis&lt;/a&gt; for \(\mathbb{R}^d\).
+Let \(\lambda_1, \dots , \lambda_d\) be the corresponding eigenvalues and without loss of generality assume \(\lambda_1 \geq \lambda_2 \cdots \geq \lambda_d\).
+The &lt;em&gt;projection error&lt;/em&gt; for \(x_i\) onto a subspace \(V \subset \mathbb{R}^d\) is defined as &lt;script type=&quot;math/tex&quot;&gt;\|x_i - P_Vx_i\|_2^2&lt;/script&gt; where \(P_V:\mathbb{R}^d \to \mathbb{R}^d\) is the projection operator.
+Then for any positive integer \(m &amp;lt; d\) the subspace &lt;script type=&quot;math/tex&quot;&gt;U_m := \operatorname{span}\{u_1, \dots , u_m\}&lt;/script&gt; minimizes the sum of the projection errors. In symbols,&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\sum_{i=1}^n \|x_i - P_{U_m}x_i\|_2^2 = \min_{\substack{V \subset \mathbb{R}^d \\ \operatorname{dim}V = m}} \sum_{i=1}^n \|x_i - P_Vx_i\|_2^2.&lt;/script&gt;
+
+&lt;p&gt;&lt;em&gt;Proof:&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Fix \(m &amp;lt; d\) and let \(V \subset \mathbb{R}^d\) be an \(m\)-dimensional subspace. Define the \(d \times n\) error matrix
+\[
+E = 
+\begin{pmatrix}
+    | &amp;amp; | &amp;amp;  &amp;amp; |\\
+     x_1 - P_Vx_1  &amp;amp; x_2 - P_Vx_2 &amp;amp; \cdots &amp;amp; x_n - P_Vx_n\\
+     | &amp;amp; | &amp;amp;  &amp;amp; | \\
+\end{pmatrix}
+= X - P_VX.
+\]
+We want to minimize
+\[
+\sum_{i=1}^n \|x_i - P_Vx_i\|_2^2 = \|E\|_F^2
+\]
+where \(\|\cdot \|_F\) is the &lt;a href=&quot;https://en.wikipedia.org/wiki/Matrix_norm#Frobenius_norm&quot;&gt;Frobenius norm&lt;/a&gt;.
+We now rewrite the error using matrix algebra
+\[
+\begin{align}\newcommand{\tr}{\mathrm{tr}}
+\|E \|_F^2 
+&amp;amp;= \| X- P_VX\|_F^2 \\
+&amp;amp;=\tr\left(( X- P_VX)( X- P_VX)^\top\right) &amp;amp; (\|A \|_F^2 = \tr(A^\top A)) \\
+&amp;amp;=\tr\left(( X- P_VX)( X^\top - X^\top P_V^\top)\right) \\
+&amp;amp;=\tr\left(XX^\top - XX^\top P_V^\top - P_VXX^\top + P_VXX^\top P_V^\top \right) \\
+&amp;amp;=\tr\left(W- W P_V^\top - P_VW + P_VW P_V^\top \right) &amp;amp; (W = XX^\top)\\
+&amp;amp;=\tr\left(W- W P_V - P_VW + P_VW P_V \right) &amp;amp; (P_V = P_V^\top )\\
+&amp;amp;=\tr(W)- \tr(W P_V) - \tr(P_VW) + \tr(P_VW P_V ) \\
+&amp;amp;=\tr(W)- \tr(P_VW ) - \tr(P_VW) + \tr(P_VW) &amp;amp; (\tr(AB) = \tr(BA) \text{ and } P_V^2 = P_V)\\
+&amp;amp;=\tr(W)- \tr(P_VW).
+\end{align}
+\]&lt;/p&gt;
+
+&lt;p&gt;The quantity \(\mathrm{tr}(W)\) is a constant, so minimizing \(\|E \|_F^2\) is the same as maximizing \(\tr(P_VW)\). Let \(\{v_1, \dots , v_m\} \subset \mathbb{R}^d\) be an orthonormal basis for \(V\). Then 
+\[
+P_V = \sum_{i = 1}^m v_iv_i^\top
+\]
+so
+\[
+\begin{align}\newcommand{\tr}{\mathrm{tr}}
+    \tr(P_VW)
+    &amp;amp;= \tr\left(\sum_{i = 1}^m v_iv_i^\top W \right) \\
+    &amp;amp;= \sum_{i=1}^m \tr\left(v_iv_i^\top W\right) \\
+    &amp;amp;= \sum_{i=1}^m \tr(v_i^\top W v_i) &amp;amp; (\tr(AB) = \tr(BA)).
+\end{align}
+\]&lt;/p&gt;
+
+&lt;p&gt;Let 
+\[
+U = \begin{pmatrix}
+| &amp;amp; | &amp;amp;  &amp;amp; | \\
+u_1 &amp;amp; u_2 &amp;amp;\cdots &amp;amp; u_d \\
+| &amp;amp; | &amp;amp;  &amp;amp; |\end{pmatrix}
+\]
+where the \(u_i \in \mathbb{R}^d\) are the eigenvectors of \(W\) as stated in the theorem. The matrix \(U\) diagonalizes \(W\) so \(W = UDU^{-1} =  UDU^\top\) where 
+\[D = \begin{pmatrix}
+\lambda_1 &amp;amp; 0 &amp;amp; \dots &amp;amp; 0 \\
+0 &amp;amp; \lambda_2 &amp;amp; \dots &amp;amp; 0 \\
+\vdots &amp;amp; \vdots &amp;amp; \ddots &amp;amp; \vdots \\
+0 &amp;amp; 0 &amp;amp; \dots &amp;amp; \lambda_n
+\end{pmatrix}.
+\]
+Now
+\[
+\begin{align}\newcommand{\tr}{\mathrm{tr}}
+\tr(P_VW)
+&amp;amp;= \sum_{i=1}^m \tr(v_i^\top W v_i)  \\
+&amp;amp;= \sum_{i=1}^m \tr(v_i^\top UDU^\top v_i)  \\
+&amp;amp;= \sum_{i=1}^m  \tr((U^\top v_i)^\top D (U^\top v_i) 
+\end{align}
+\]&lt;/p&gt;
+
+&lt;p&gt;If \(v_i = u_i\) for all \(1 \leq i \leq m\) then 
+\[U^\top v_i = U^\top u_i = (0, \dots, 0, 1, 0, \dots, 0)^\top\]
+is the \(i\)-th standard basis vector. Thus 
+\[
+\begin{align}\newcommand{\tr}{\mathrm{tr}}
+\tr(P_VW)
+&amp;amp;= \sum_{i=1}^m  \tr((U^\top v_i)^\top D (U^\top v_i) \\
+&amp;amp;= \sum_{i=1}^m \lambda_i
+\end{align}
+\]&lt;/p&gt;
+
+&lt;p&gt;Therefore it suffices to show that \(\mathrm{tr}(P_VW) \leq \sum_{i=1}^m \lambda_i\) for all dimension \(m\) subspaces \(V\).&lt;/p&gt;
+
+&lt;p&gt;We will show this is true in the case \(m = 2\), i.e. \(\mathrm{tr}(P_VW) \leq \lambda_1 + \lambda_2\) when \(V\) is 2 dimensional. The case \(m &amp;gt; 2\) uses the same argument but it is more notationally heavy. Let \(\alpha = U^\top v_1 \in \mathbb{R}^d\) and \(\beta =U^\top v_2 \in \mathbb{R}^d\). Note that since \(U\) is unitary \(\|\alpha\|_2^2 = \|\beta\|_2^2 = 1\) and \(\langle \alpha, \beta \rangle = 0\).&lt;/p&gt;
+
+&lt;p&gt;The first step is to show that \(\alpha_i^2 + \beta_i^2 \leq 1\) for all \(i\). Let \(e_i = (0, \dots , 0, 1, 0, \dots , 0)\) be the \(i\)-th standard basis vector. Since \(\alpha\) and \(\beta\) are orthogonal and have length 1, the projection of \(e_i\) onto \(\operatorname{span}\{\alpha, \beta \}\) is given by
+\[\hat{e}_i = \langle e_i, \alpha \rangle \alpha + \langle e_i, \beta \rangle \beta = \alpha_i \alpha + \beta_i \beta .\]
+Then
+\[ \alpha_i^2 + \beta_i^2 = \|\hat{e_i}\|_2^2 \leq \|e_i\|_2^2 = 1 \]
+since a projected vector always has length less than or equal to the original vector.&lt;/p&gt;
+
+&lt;p&gt;The second step is to observe that \(\sum_{i=1}^d (\alpha_i^2 + \beta_i^2) = \|\alpha \|_2^2 + \|\beta \|_2^2 = 2\).&lt;/p&gt;
+
+&lt;p&gt;Finally, we want to maximize 
+\[ \mathrm{tr}(P_VW) = \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \]
+and we know that
+\[\alpha_i^2 + \beta_i^2 \leq 1 \text{ and } \sum_{i=1}^d(\alpha_i^2 + \beta_i^2) = 2 .\]&lt;/p&gt;
+
+&lt;p&gt;The eigenvalues of a positive semidefinite matrix are nonnegative so the sum \(\sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2)\) is maximized when when the first and second coefficient are as large as possible, i.e. when \(\alpha_1^2 + \beta_1^2 = \alpha_2^2 + \beta_2^2 = 1\). But then the second condition implies that \(\alpha_i^2 + \beta_i^2 = 0\) for \(i &amp;gt; 2\). Thus
+\[ \mathrm{tr}(P_VW) = \sum_{i=1}^d \lambda_i(\alpha_i^2 + \beta_i^2) \leq \lambda_1 + \lambda_2. \]
+\(\square\)&lt;/p&gt;
+
+&lt;p&gt;We also need to prove that the size of the eigenvalue is proportional to the variance in the direction of the corresponding eigenvector.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Theorem:&lt;/strong&gt; As in the previous theorem let \(X = \begin{pmatrix}x_1 &amp;amp; x_2 &amp;amp; \cdots &amp;amp; x_n \end{pmatrix}\) be the data matrix, \(W = XX^\top\) the covariance matrix, \(u_1, \dots , u_d\) the eigenvectors of \(W\) and \(\lambda_1, \dots , \lambda_d\) the eigenvalues. Let \(P_{u_i}: \mathbb{R}^d \to \mathbb{R}^d\) be the projection operator onto the subspace \(\mathrm{span}\{u_i\}\). Then \[
+    \sum_{j=1}^m\|P_{u_i}x_j\|_2^2 = \lambda_i
+\] &lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Proof:&lt;/em&gt; &lt;/p&gt;
+
+&lt;p&gt;
+The working is similar to the previous proof so I'll omit some steps.
+\[
+\begin{align}
+\sum_{j=1}^m\|P_{u_i}x_j\|_2^2 
+&amp;amp;= \|u_iu_i^\top X\|_F^2 \\
+&amp;amp;= \mathrm{tr}((u_iu_i^\top X)(u_iu_i^\top X)^\top)  \\
+&amp;amp;= \mathrm{tr}(u_i^\top W u_i)  \\
+&amp;amp;=  \mathrm{tr}((U^\top u_i)^\top D (U^\top u_i) \\
+&amp;amp;= \lambda_i .
+\end{align}
+\] 
+&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;p&gt;&lt;b id=&quot;f1&quot;&gt;1&lt;/b&gt; I actually scaled by two times the square root of the eigenvalue. The eigenvalue tells you the variance and I wanted the standard deviation. I multiplied by two so that ellipse would capture most of the data. &lt;a href=&quot;#a1&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">The code used to generate the plots for this post can be found here.</summary></entry></feed>
