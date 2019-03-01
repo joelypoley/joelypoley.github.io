@@ -16,7 +16,7 @@ Here is (roughly) how I implemented my string to 64 bit integer function. Can yo
 // At the top of the file.
 constexpr int board_size = 8;
 
-// algebraic_square would be one of a1, a2, ..., h7, h8.
+// algebraic_square would be one of "a1", "a2", ..., "h7", "h8".
 uint64_t str_to_square(std::string_view algebraic_square) {
   const char column = algebraic_square[0];
   const char row = algebraic_square[1];
