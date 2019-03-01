@@ -32,7 +32,7 @@ This bug disturbed me, not because bugs like this are so unusual, but because no
 
 I was already aware that left shifting off the end of a *signed* integer is undefined behavior but I thought that left shifting off the end of unsigned integers was perfectly well defined, the most significant bits just get discarded. From [cpprefence.com](https://en.cppreference.com/w/):
 
-> > For unsigned a, the value of a << b is the value of a * 2b, reduced modulo 2N where N is the number of bits in the return type (that is, bitwise left shift is performed and the bits that get shifted out of the destination type are discarded).
+> For unsigned a, the value of a << b is the value of a * 2b, reduced modulo 2N where N is the number of bits in the return type (that is, bitwise left shift is performed and the bits that get shifted out of the destination type are discarded).
 
 According to cppreference, my function should simply push the single set bit `unit64_t(1)` off the end and return 0 every time. Since `str_to_square` clearly wasn't doing this, my next step was to run my program with the [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html). I got the following warning.
 
@@ -44,13 +44,13 @@ Which confirmed that I was indeed invoking undefined behavior.
 
 After consulting the [C++ standard](http://www.open-std.org/Jtc1/sc22/wg21/docs/papers/2014/n4296.pdf) (something I had been trying to avoid doing) I still did not understand. Paragraph 5.8.2 says:
 
-> > 5.8.2 The value of E1 << E2 is E1 left-shifted E2 bit positions; vacated bits are zero-filled. If E1 has an unsigned type, the value of the result is E1 × 2E2, reduced modulo one more than the maximum value representable in the result type. Otherwise, if E1 has a signed type and non-negative value, and E1 × 2E2 is representable in the corresponding unsigned type of the result type, then that value, converted to the result type, is the resulting value; otherwise, the behavior is undefined.
+> 5.8.2 The value of E1 << E2 is E1 left-shifted E2 bit positions; vacated bits are zero-filled. If E1 has an unsigned type, the value of the result is E1 × 2E2, reduced modulo one more than the maximum value representable in the result type. Otherwise, if E1 has a signed type and non-negative value, and E1 × 2E2 is representable in the corresponding unsigned type of the result type, then that value, converted to the result type, is the resulting value; otherwise, the behavior is undefined.
 
 This paragraph only mentions undefined behavior for signed integers, but I was using unsigned integers so it shouldn't affect me.
 
 I was just about to give up. It was getting late, and although it was a remarkable coincidence that forgetting the quote marks didn't affect the behavior of my program, I had already fixed the bug. Then I noticed the paragraph above 5.8.2:
 
-> > 5.8.1. The shift operators << and >> group left-to-right. ... The behavior is undefined if the right operand is negative, or greater than or equal to the length in bits of the promoted left operand.
+> 5.8.1. The shift operators << and >> group left-to-right. ... The behavior is undefined if the right operand is negative, or greater than or equal to the length in bits of the promoted left operand.
 
 I finally had my answer! It is undefined behavior to shift a 64 bit integer by 64 or greater.
 
@@ -72,7 +72,7 @@ str_to_square(std::basic_string_view<char, std::char_traits<char> >): # @str_to_
 
 The left shift is being done by the `shl` instruction. Helpfully, if you right click on an assembly instruction in compiler explorer it points you to the documentation for that instruction, which said:
 
-> > The destination operand can be a register or a memory location. The count operand can be an immediate value or the CL register. The count is masked to 5 bits (or 6 bits if in 64-bit mode and REX.W is used).
+> The destination operand can be a register or a memory location. The count operand can be an immediate value or the CL register. The count is masked to 5 bits (or 6 bits if in 64-bit mode and REX.W is used).
 
 I finally had my answer! Masking by 6 bits is the same as reducing modulo 64 and by coincidence, `((row - 1) + 1) * board_size` is the same as the correct value `(row - '1' + 1) * board_size` modulo 64 (because `(('1' - 1) * board_size) % 64 == 0`).
 
