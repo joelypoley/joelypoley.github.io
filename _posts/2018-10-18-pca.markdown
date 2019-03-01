@@ -3,7 +3,7 @@ layout: post
 title:  "Principal component analysis: pictures, code and proofs"
 ---
 
-<p><small>The code used to generate the plots for this post can be found <a href="https://github.com/joelypoley/joelypoley.github.io/blob/master/notebooks/pca.ipynb">here</a>.</small></p>
+<p><small>The code used to generate the plots for this post can be found [here](/assets/notebooks/pca.ipynb).</small></p>
 
 ## I.
 
