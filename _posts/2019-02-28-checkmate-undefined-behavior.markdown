@@ -2,7 +2,7 @@
 layout: post
 title:  "Checkmate, undefined behavior"
 ---
-Undefined behavior is the bane of C and C++ programmers. The compiler can choose to do whatever it wants if a program has undefined behavior. This is normally not a good thing, but I recently wrote some code with some undefined behavior and amazingly the compiler chose to do exactly what I had intended, not what I told it to do.
+Undefined behavior is the bane of C and C++ programmers. The compiler can choose to do whatever it wants if a program has undefined behavior. This is normally not a good thing, but I recently wrote some code with undefined behavior and amazingly the compiler chose to do exactly what I had intended, not what I told it to do.
 
 I have spent the last week working on a [chess engine](https://github.com/joelypoley/pawn_grabber) in C++. Most chess engines take advantage of the convenient coincidence that the number of squares on a chess board, 64, is the same as the word size on modern processors. So, you can do things like store the location of all the white pawns with a single 64 bit integer: you just set the i-th bit to 1 if there is a white pawn on the i-th square. This technique allows you to do neat tricks, such as move all pieces up one square by left shifting the integer by 8.
 
