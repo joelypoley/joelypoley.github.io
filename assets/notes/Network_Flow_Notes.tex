@@ -1,0 +1,197 @@
+\documentclass[12pt]{article}
+\usepackage{subfiles}
+\usepackage{amsmath,amsthm,amssymb,graphicx,titling,mathrsfs,tikz,tikz-cd}
+
+\usepackage[ruled, vlined]{algorithm2e}
+\usepackage[position=top]{subfig}
+\newtheorem{Definition}{Definition}
+\newtheorem{Example}{Example}
+\let\oldExample\Example
+\renewcommand{\Example}{\oldExample\normalfont}
+
+\newtheorem{Exercise}{Exercise}
+\let\oldExercise\Exercise
+\renewcommand{\Exercise}{\oldExercise\normalfont}
+
+\newtheorem{Theorem}{Theorem}
+\newtheorem{Lemma}{Lemma}
+\newtheorem{Corollary}{Corollary}
+\newtheorem{Proposition}{Proposition}
+
+\newcommand{\iso}{\cong}
+\newcommand{\noit}{\operatorname}
+\newcommand{\normlin}{\trianglelefteq}
+\newcommand{\ideal}{\trianglelefteq}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\A}{\mathbb{A}}
+
+
+\setlength{\droptitle}{-7em}
+\title{Network Flow Notes}
+\author{Joel Laity}
+\setlength{\parindent}{0cm}
+\begin{document}
+\maketitle
+
+
+\begin{Definition}
+    A network is a directed graph where:
+    \begin{itemize}
+        \item Each edge $e$ is assigned a positive real number $C_e >0 $, called its \emph{capacity}.
+        \item There is a non-empty set of vertices $S$, where each vertex in $S$ is called a \emph{source}.
+        \item There is a non-empty set of vertices $T$ called \emph{sinks}.
+        \item We require that $S$ and $T$ are disjoint.
+    \end{itemize}
+\end{Definition}
+
+\begin{Definition}
+    Let $G$ be a network. A \emph{flow} $f$ on $G$  is an assignment of a real number $f_e$ to each edge $e$ in the network. We require that:
+    \begin{itemize}
+        \item For all edges $0\leq f_e \leq C_e$.
+        \item (Consevation of flow property) For all vertices $v$ not a source or a sink
+              \[
+                  \sum_{e\text{ into }v}f_e = \sum_{e\text{ out of }v}f_e .
+              \]
+
+    \end{itemize}
+\end{Definition}
+
+\begin{Definition}
+    The \emph{size} of a flow $f$, denoted $|f|$ is defined by
+    \[
+        |f| = \sum_{e \text{ out of some source}} f_e - \sum_{e \text{ into some source}}f_e
+    \]
+\end{Definition}
+
+\begin{Lemma}
+    Let $f$ be a flow on a network $G = (V, E)$ with sources $S$ and sinks $T$. Then
+    \[
+        |f| = \sum_{e \text{ into some sink}} f_e- \sum_{e \text{ out of some sink}}f_e
+    \]
+\end{Lemma}
+\begin{proof}
+    We observe that
+    \begin{align*}
+        0 & = \sum_{e\in E}f_e - \sum_{e \in E}f_e                                                                                                                                    \\
+          & = \sum_{v\in V}\left(\sum_{e\text{ into }v}f_e - \sum_{e\text{ out of }v}f_e \right)                                                                                      \\
+        \intertext{if $v$ is neither a source nor a sink then $\sum_{e\text{ into }v}f_e - \sum_{e\text{ out of }v}f_e = 0$ by conservation of flow,}
+          & = \sum_{v\in S\cup T}\left(\sum_{e\text{ into }v}f_e - \sum_{e\text{ out of }v}f_e \right)                                                                                \\
+        \intertext{since $S$ and $T$ are disjoint we can split the sum}
+          & = \sum_{v\in S}\left(\sum_{e\text{ into }v}f_e - \sum_{e\text{ out of }v}f_e \right) + \sum_{v\in T}\left(\sum_{e\text{ into }v}f_e - \sum_{e\text{ out of }v}f_e \right) \\
+          & = \sum_{v\in S}\sum_{e\text{ into }v}f_e - \sum_{v\in S}\sum_{e\text{ out of }v}f_e                                                                                       \\
+          & \qquad \qquad \qquad \qquad \qquad \qquad + \sum_{v\in T}\sum_{e\text{ into }v}f_e - \sum_{v\in T}\sum_{e\text{ out of }v}f_e                                             \\
+          & = \sum_{e \text{ into some source}}f_e - \sum_{e \text{ out of some source}}f_e                                                                                           \\
+          & \qquad \qquad \qquad \qquad \qquad \qquad + \sum_{e \text{ into some sink}}f_e - \sum_{e \text{ out of some sink}}f_e                                                     \\
+          & = -|f| + \sum_{e \text{ into some sink}}f_e - \sum_{e \text{ out of some sink}}f_e.
+    \end{align*}
+    So
+    \[
+        |f| = \sum_{e \text{ into some sink}} f_e- \sum_{e \text{ out of some sink}}f_e
+    \]
+    as required.
+\end{proof}
+
+\begin{Definition}
+    Let $G$ be a network. Let $f$ be a flow on $G$. The \emph{residual network}  $G_f$ is a graph with the same vertex set as $G$ with the following edges:
+    \begin{itemize}
+        \item For every edge $e$ of $G$ with $f_e < C_e$ there is an edge in $G_f$ with same beginning and end vertex and with capacity $C_e-f_e>0 $.
+        \item For every edge $e$ of $G$ with $f_e>0$ there is an edge $e'$ in the opposite direction in $G_f$ with capacity $f_e$.
+    \end{itemize}
+\end{Definition}
+
+\begin{Example}
+    The image at the top is a graph with edges labeled $f_e / C_e$. The bottom image is the residual graph is the residual graph where each edge is labelled with its capacity.
+    \begin{center}
+        \includegraphics[scale=0.2]{residual_graph}
+    \end{center}
+\end{Example}
+
+\begin{Definition}
+    Let $f$ be a flow on a network $G$. Let $g$ be a flow on the residual $G_f$. Then we define a flow $f+g$ on $G$ as follows:
+    \begin{itemize}
+        \item Let $e$ be an edge in $G$ with flow $f_e$.
+        \item Let $g_e$ be the flow along the corresponding edge in $G_f$.
+        \item Let $e'$ be the edge in $G_f$ in the opposite direction to $e$. It has flow $g_e'$.
+        \item Then $(f+g)_e = f_e + g_e - g_{e'}$.
+    \end{itemize}
+    (The next theorem proves that $f+g$ is indeed a flow).
+\end{Definition}
+
+\begin{Example}
+    An example of the sum of two flows is given in this diagram:
+    \begin{center}
+        \includegraphics[scale=0.25]{flow_sum}
+    \end{center}
+\end{Example}
+
+\begin{Theorem}
+    Let $G$ be a network with flow $f$. Let $G_f$ be its residual with flow $g$. Then:
+    \begin{itemize}
+        \item $f+g$ is a flow on $G$
+        \item $|f+g| = |f|+|g|$
+        \item Fix $f$. Then for any flow $f'$ on $G$ there exists some $g'$ such that $f'=f+g'$.
+    \end{itemize}
+\end{Theorem}
+\begin{proof}
+    Conservation of flow of $f$ and $g$ imply conservation of flow of $f+g$. Also $f_e+g_e\leq f_e+(c_e-f_e) = C_e$ and $f_e-g_{e'}\geq f_e-f_e = 0$ thus $0 \leq f_e + g_e-g_{e'}\leq C_e$ so $(f+g)_e$ satisfies the conditions in the definition of flow for all edges $e$.
+
+    For any particular source $s$ we have
+    \begin{align*}
+        \sum_{e\text{ out of }s}(f+g)_e - \sum_{e\text{ into }s}(f+g)_e
+          & = \sum_{e\text{ out of }s}(f_e + g_e - g_{e'}) - \sum_{e\text{ into }s}(f_e+g_e-g_{e'})                                                   \\
+          & = \sum_{e\text{ out of }s}f_e - \sum_{e\text{ into }s}f_e +\sum_{e\text{ out of }s}( g_e - g_{e'}) -  \sum_{e\text{ into }s}(g_e-g_{e'}).
+    \end{align*}
+    (Note the sums are over edges in $G$ not $G_f$.) If we take the first and last expression in the displayed equation and sum over all sources $s$ we get $|f+g| = |f|+|g|$.
+
+    (Details omitted) For the last part we can define $g' = f' - f$ for a natural definition of subtracting flows (flip the signs in the definition of the sum of two flows). This $g'$ is the one we want.
+\end{proof}
+
+\begin{Definition}
+    Given a network $G$ a cut $\mathcal{C}$ is a set of vertices in $G$ so that the set of sources $S$ is a subset of $\mathcal{C}$ and $\mathcal{C}$ is disjoint from the sinks of $G$. The size of a cut is given by
+    \[
+        |\mathcal{C}| = \sum_{e \text{ out of }\mathcal{C}}C_e
+    \]
+\end{Definition}
+
+\begin{Lemma}
+    Fix a network. For any flow $f$ and any cut $\mathcal{C}$ we have
+    \[
+        |f|\leq |\mathcal{C}|.
+    \]
+\end{Lemma}
+\begin{proof}
+    We have
+    \begin{align*}
+        |f| & = \sum_{v\text{ source}}\left(\sum_{e\text{ out of } v}f_e - \sum_{e\text{ into } v}f_e \right) \\
+        \intertext{now we use conservation of flow to add terms to the sum}
+            & =\sum_{v\in \mathcal{C}}\left(\sum_{e\text{ out of } v}f_e - \sum_{e\text{ into } v}f_e \right)
+        \intertext{if both ends of an edge $e$ are in $\mathcal{C}$ then these terms will cancel out of the sum}
+            & =\sum_{e \text{ out of }\mathcal{C}}f_e - \sum_{e\text{ into }\mathcal{C}}f_e                   \\
+            & \leq \sum_{e \text{ out of }\mathcal{C}}f_e                                                     \\
+            & \leq \sum_{e \text{ out of }\mathcal{C}}C_e                                                     \\
+            & = |\mathcal{C}|.
+    \end{align*}
+
+\end{proof}
+
+\begin{Corollary}
+    For any network
+    \[
+        \max_{\text{flows } f}|f|\leq \min_{\text{cuts }\mathcal{C}}|\mathcal{C}|.
+    \]
+\end{Corollary}
+We now strengthen this corollary and turn it into a theorem.
+\begin{Theorem}
+    For any network
+    \[
+        \max_{\text{flows } f}|f|= \min_{\text{cuts }\mathcal{C}}|\mathcal{C}|.
+    \]
+\end{Theorem}
+\begin{proof}
+    If $\max_{\text{flows } f}|f|=0$ then there is no path from any source to any sink. Let $\mathcal{C}$ be the set of vertices reachable from $S$ the set of all sources. There are no edges out of $\mathcal{C}$ so $|\mathcal{C}|=0$.
+\end{proof}
+\end{document}

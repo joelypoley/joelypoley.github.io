@@ -1,0 +1,952 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath,amsthm,amssymb,graphicx,dsfont,titling,mathrsfs}
+
+\usepackage[ruled,vlined]{algorithm2e}
+
+\usepackage{mathtools}
+\usepackage{mdframed}
+
+
+\newcommand{\myreferences}{/Users/joellaity/Documents/MyBib.bib}
+
+
+\newtheorem{Definition}{Definition}
+\newtheorem{Proposition}{Proposition}
+\newtheorem{Example}{Example}
+\let\oldExample\Example
+\renewcommand{\Example}{\oldExample\normalfont}
+
+\newtheorem{Exercise}{Exercise}
+\let\oldExercise\Exercise
+\renewcommand{\Exercise}{\oldExercise\normalfont}
+
+\newtheorem{Theorem}{Theorem}
+\newtheorem{Lemma}{Lemma}
+\newtheorem{Corollary}{Corollary}
+\newtheorem{Remark}{Remark}
+
+\newif\ifsolutions
+\solutionstrue
+
+\newcommand{\iso}{\cong}
+\newcommand{\noit}{\operatorname}
+\newcommand{\normlin}{\trianglelefteq}
+\newcommand{\ideal}{\trianglelefteq}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\A}{\mathbb{A}}
+\newcommand{\Zm}{\Z_{m_1}\times \Z_{m_2} \times \cdots \times \Z_{m_r}}
+\DeclareMathOperator*{\E}{\mathbb{E}}
+
+
+\setlength{\droptitle}{-8em}
+\title{The Discrete Fourier Transform}
+\author{Joel Laity}
+
+\begin{document}
+\maketitle
+
+\section{The space $\ell^2(G)$}
+
+We are interested in analysing functions of the form $f:G\to \C$ where $G$ is some finite abelian group.
+Most people only care about the case where $G$ is the cyclic group $G = \Z_n$ and this is the example the reader should keep in mind when reading the theorems.
+The following definition gives us some notation to talk about the space of these functions.
+
+
+\begin{Definition} %Def: L(G)
+    Let $G$ be a finite, abelian group.
+    Define $\ell^2(G)$ to be the set of all functions $f:G\to \C$.
+    In symbols,
+    \[
+        \ell^2(G)=\{f:G\to \C\}.
+    \]
+\end{Definition}
+
+
+
+%Prop: L(G) is a Hilbert space
+The set $\ell^2(G)$ is a vector space over $\C$ with the usual addition and scalar multiplication of functions.
+It comes with an  inner product
+\[
+    \left<f,g\right> =\frac{1}{|G|}\sum_{x \in G}f(x)\overline{g(x)}.
+\]
+In fact, $\ell^2(G)$ is a Hilbert space; i.e., the inner product satisfies the following properties:
+\begin{enumerate}
+    \item $\langle f, g \rangle = \overline{\langle g, f\rangle}$,
+    \item $\langle f, g \rangle$ is linear in $f$ and conjugate linear in $g$,
+    \item $\langle f, f \rangle \geq 0$,
+    \item $\langle f, f \rangle = 0$ if and only if $f = 0$,
+\end{enumerate}
+and the space is a compete metric space where the metric is given by the norm induced by the inner product
+\[
+    \| f\|_2=\sqrt{\left<f,f\right>}.
+\]
+
+
+
+\begin{Proposition} \label{dimension} % Prop: dim L(G) = |G|
+    Let $G$ be a finite, abelian group.
+    Then
+    \[
+        \dim \ell^2(G)=|G|.
+    \]
+\end{Proposition}
+\begin{proof}
+    For all $x\in G$ define $\delta_x:G\to \C$ by $\delta_x(y)=1$ if $x=y$ and $\delta_x(y)=0$ if $x\neq y$.
+    Then the $\delta_x$ are linearly independent.
+    For any $f\in \ell^2(G)$ we have $f=\sum_{x\in G}f(x)\delta_x$ thus the $\delta_x$ span $\ell^2(G)$.
+    It follows that $\dim \ell^2(G)=|G|.$
+\end{proof}
+
+We now define a way of multiplying two elements in our space.
+
+\begin{Definition} \label{convolution}% Def: convolution
+    Let $G$ be a finite, abelian group.
+    Let $f,g\in \ell^2(G)$.
+    Then the convolution of $f$ and $g$ is the function $f*g:G\to \C$ defined by
+    \[
+        (f*g)(x)=\frac{1}{|G|}\sum_{y\in G}f(y)g(x-y).
+    \]
+\end{Definition}
+
+
+
+\begin{Proposition} \label{convolution properties} % Prop: convolution properties
+    Let $G$ be a finite, abelian group. Let $f, g, h\in \ell^2(G)$. Then
+    \begin{enumerate}
+        \item $f*g = g*f$ for all $f, g \in \ell^2(G)$,
+        \item $f*(g*h) = (f*g)*h$ for all $f, g \in \ell^2(G)$,
+        \item $f*(g+h) = f*g + f*h$ for all $f, g \in \ell^2(G)$,
+        \item $(af) * (bg) = (ab)(f*g)$ for all $f, g \in \ell^2(G)$ and $a, b\in \C$.
+    \end{enumerate}
+\end{Proposition}
+
+Proposition \ref{convolution properties} shows that the vector space $\ell^2(G)$ is an associative algebra where $*$ is the algebra multiplication.
+
+The definition of convolution can seem a little mysterious at first.
+An alternative way of defining convolution would be to say it is a map $*:\ell^2(G) \times \ell^2(G) \to \ell^2(G)$ with properties 1-4 of Proposition \ref{convolution properties} and
+\[
+    \delta_x * \delta_y = \delta_{x+y}
+\]
+where $\delta_x:G\to \C$ is the usual delta function
+\[
+    \delta_x(z) =
+    \begin{cases}
+        1 & \text{if } x = z, \\
+        0 & \text{otherwise}.
+    \end{cases}
+\]
+This definition of convolution extends linearly to all of $\ell^2(G)$.
+
+\begin{Remark}[The group algebra of $G$ and $\ell^2(G)$ are isomorphic]
+
+
+    Another way of viewing convolution is that it is multiplication in the group algebra of $G$.
+
+    Recall the complex group algebra of a finite group $G$ is a vector space with basis $G$, so an arbitrary element of the group algebra is a formal sum
+    \[
+        \sum_{x\in G} \alpha_x x
+    \]
+    where $\alpha_x\in \C$.
+    The notation is confusing since we have been using additive notation for $G$, bear in mind that the sum here is a formal sum of linearly independent vectors.
+
+    The multiplication of the basis vectors in the group algebra is just the usual group operation and this extends linearly to define a multiplication on the group algebra.
+    It's easy to verify that
+    \[
+        \delta_x \mapsto x.
+    \]
+    extends linearly to an (algebra) isomorphism between $\ell^2(G)$ and the group algebra of $G$.
+    We can explicitly write this isomorphism as
+    \[
+        f \mapsto \sum_{x\in G} f(x)x.
+    \]
+\end{Remark}
+
+
+
+
+
+%: ----------------------------------------------------------------------
+%:          Characters
+% -----------------------------------------------------------------------
+\section{Characters}
+
+So far we have encountered the delta basis for $\ell^(G)$ which consists of all functions of the form
+\[
+    \delta_x(y) =
+    \begin{cases}
+        1 & \text{if } x = y, \\
+        0 & \text{otherwise}.
+    \end{cases}
+\]
+
+We will now define the \emph{Fourier Basis}, $\widehat{G}$, which consists of all the \emph{characters} (defined below) of $G$.
+This sections defines the Fourier Basis and proves that it is indeed a basis.
+
+\begin{Definition} \label{dual group} % Def: dual
+    Let $G$ be a finite, abelian group.
+    The dual of $G$, denoted $\widehat{G}$, is the set of all group homomorphisms from $G$ to the group of non-zero complex numbers $(\C^*, \cdot) $ under complex multiplication.
+    In symbols,
+    \[
+        \widehat{G}=\{\chi :G\to \C^*\mid \chi \text{ is a group homomorphism}\}.
+    \]
+    The homomorphisms $\chi \in \widehat{G}$ are called characters.
+\end{Definition}
+
+
+We will now prove some basic properties of  characters.
+For the next couple of lemmas $G$ is a finite, abelian group and $\chi \in \widehat{G}$.
+
+\begin{Lemma} \label{root of unity}
+    $\chi(x)$ is a $|G|$-th root of unity and in particular $|\chi(x)|=1$.
+\end{Lemma}
+\begin{proof}
+    For any $\chi\in \widehat{G}$ and any $x\in G$ we have
+    \[
+        \chi(x)^{|G|} = \chi(|G|x) = \chi(0) = 1.
+    \]
+\end{proof}
+
+\begin{Definition} \label{conjugate character}
+    Let $\chi\in \widehat{G}$ be a character of $G$.Define the conjugate character $\overline{\chi}(x):G\to \C$ by $\overline{\chi}(x)=\overline{\chi(x)}$.
+\end{Definition}
+
+\begin{Lemma}
+    $\chi(-x) = \overline{\chi}(x)$.
+\end{Lemma}
+\begin{proof}
+    Since $\chi \in \widehat{G}$ is a group homomorphism we have
+    \[
+        \chi(-x)
+        = \chi(x)^{-1}
+        = \frac{\overline{\chi(x)}}{|\chi(x)|^2}
+        = \overline{\chi(x)}
+        = \overline{\chi}(x).
+    \]
+\end{proof}
+
+We aim to show that $\widehat{G}$ forms a basis for $\ell^2(G)$ but first we prove that $\widehat{G}$ is a group.
+
+\begin{Proposition} \label{charactersaregroup} % Prop: dual is abelian group 
+    The set $\widehat{G}$ from Definition \ref{dual group} forms an abelian group where the group operation is pointwise multiplication, i.e. $(\chi\psi)(x) = \chi(x)\psi(x)$ for any $\chi, \psi\in \widehat{G}$ and any $x\in G$.
+\end{Proposition}
+\begin{proof}
+    The group operation is clearly associative.
+    Let $\chi, \psi\in \widehat{G}$.
+    Then $(\chi\psi)(x+y) = \chi(x+y)\psi(x+y) = \chi(x)\chi(y)\psi(x)\psi(y)= (\chi\psi)(x)(\chi\psi)(y).$
+    So $\widehat{G}$ is closed under multiplication.
+    Finally the inverse of a character $\chi$ in the group $\widehat{G}$ is the conjugate character  $\overline{\chi}$ as defined in Definition \ref{conjugate character}.
+    The function $\overline{\chi}$ is clearly a homomorphism and it is the inverse of $\chi$ since $(\chi\overline{\chi})(x)=\chi(x)\overline{\chi(x)} = |\chi(x)|^2=1$, where the last equality follows by Lemma \ref{root of unity}.
+\end{proof}
+
+So far we have been talking about abelian groups in the abstract.
+The Fundamental Theorem of Finite Abelian Groups says that any abelian group is a direct product of cyclic groups and for many applications we can just assume we are working with the group $\Zm$.
+This allows us to write down explicit formulae for the homomorphisms and there is a very natural way of indexing the elements of $\widehat{G}$ with those of $G$ which makes the notaion more convenient.
+
+\begin{Definition} \label{characters}% Def: chi_x 
+    Let $G = \Zm$.
+    Then for every $x = (x_1, x_2, \dots , x_r)\in G$ define $\chi_x : G\to \C^*$ by
+    \[
+        chi_x(y) = \prod_{j = 1}^r\exp \left( 2 \pi i \frac{x_jy_j}{m_j}\right),
+    \]
+    where $i=\sqrt{-1}$.
+\end{Definition}
+
+\begin{Remark} \label{chiy(x)=chix(y)}
+    Note that $\chi_x(y) = \chi_y(x)$ for all $x,y\in G$.
+\end{Remark}
+
+It is easy to verify that $\chi_x$ is a character of $G$ for all $x\in G$. The next proposition shows that all the characters are of this form.
+
+
+
+\begin{Proposition} \label{G is isomorphic to dual}% Prop: Z_{m_1} x ... x Z_{m_r} = dual
+    Let $G=\Zm$.
+    Then $G\cong \widehat{G}$ under the isomorphism $\phi : G \to \widehat{G}$   defined by $\phi(x) = \chi_x$.
+\end{Proposition}
+\begin{proof}
+    The map $\phi$ is a homomorphism since
+    \begin{align*}
+        \chi_{x+y}(z)
+          & = \prod_{j = 1}^r\exp \left( 2 \pi i \frac{(x_j + y_j)z_j}{m_j}\right)                                       \\
+          & = \prod_{j = 1}^r\exp \left( 2 \pi i \frac{x_j z_j}{m_j}\right)\exp \left( 2 \pi i \frac{y_jz_j}{m_j}\right) \\
+          & = \chi_x(z)\chi_y(z).
+    \end{align*}
+    For surjectivity, define $e_j = (0,\dots , 0,1,0\dots , 0)\in G$ to be the tuple with $1$ in the $j$-th position and $0$ everywhere else.
+    Let $\chi:G\to \C^*$ be a homomorphism.
+    Then $\chi(e_j)$ is an $m_j$-th root of unity (see Lemma \ref{root of unity}) so $\chi(e_j) = \exp(2 \pi i x_j/m_j)$ for some $x_j\in \{0,1,\dots , m_j-1\}$.
+    Let $x=(x_1, \dots , x_{m_j})$ then $\chi_x(e_j) = \chi(e_j)$ for all $1\leq j \leq r$ and, since the $e_j$ form a generating set for $G$, it follows that $\chi=\chi_x$.
+\end{proof}
+
+The fundamental theorem of finite abelian groups, when combined with the proposition above, tells us that any finite abelian group is isomorphic to its dual.
+
+\begin{Proposition}
+    Any finite abelian group $G$ is isomorphic to its dual $\widehat{G}$.
+\end{Proposition}
+
+Note that there is no \emph{canonical} isomorphism between $G$ and $\widehat{G}$.
+For example, when $G$ is cyclic we must first identify it with $\Z_n$ to invoke Proposition \ref{G is isomorphic to dual}.
+To do this we must first choose a generator  for $G$.
+A change in the choice of generator changes the isomorphism.
+Despite this, we will find it very useful later on (see Definition 6) to index the elements of $\widehat{G}$ with elements of $G$ using the $\chi_x$ notation.
+
+Since $G$ is isomorphic to its dual it is obvious that $G$ is isomorphic to its double dual, $G\hat{\;}\hat{\;}$.
+Even though there is no canonical isomorphism between $G$ and $\widehat{G}$ there \emph{is} a canonical isomorphism between $G$ and $G\hat{\;}\hat{\;}$.
+The isomorphism is $\phi:G \to G\hat{\;}\hat{\;}$ where, for each $g\in G$ we define $\phi(g):\widehat{G}\to \C^*$ by $[\phi(g)](\chi) = \chi(g)$.
+
+We can now prove that $\widehat{G}$ forms a basis for $\ell^2(G)$.
+
+\begin{Theorem} \label{orthogonality} % Thm: Orthogonality
+    Let $G$ be a finite, abelian group.
+    The group, $\widehat{G}$, of characters of $G$ satisfies the following orthogonality relations:
+    \[
+        \sum_{x\in G}\chi(x)
+        =
+        \begin{cases}
+            |G| & \text{if }\chi \text{ is the identity in  }\widehat{G}, \\
+            0   & \text{otherwise},
+        \end{cases}
+        \qquad
+        \sum_{\chi\in \hat{G}}\chi(x)=
+        \begin{cases}
+            |G| & \text{if }x=0,    \\
+            0   & \text{otherwise}.
+        \end{cases}
+    \]
+\end{Theorem}
+\begin{proof}
+    Let $S=\sum_{x\in G}\chi(x)$.
+    If $\chi$ is the identity in $\widehat{G}$ then clearly $\chi(x) = 1$ for all $x\in G$ so $S=|G|$.
+    If not, then there exists some $y\in G$ such that $\chi(y)\neq 1$.
+    Then
+    \[
+        \chi(y)S=\sum_{x\in G}\chi(x+y)=S.
+    \]
+    Hence $S=0$.
+
+    For the second part let $T=\sum_{\chi\in \hat{G}}\chi(x)$.
+    If $x=0$ then $T=|G|$.
+    If $x\neq 0$ then, by using Definition \ref{characters} it is easy to see there exists some $\psi \in \widehat{G}$ such that $\psi(x)\neq 1$.
+    Then
+    \[
+        \psi(x)T=\sum_{\chi\in \hat{G}}(\psi\chi)(x)=T.
+    \]
+    Hence $T=0$.
+\end{proof}
+
+
+
+\begin{Corollary} \label{dual forms orthonormal basis}% Cor: dual forms orthonormal basis 
+    Let $\chi,\psi\in \widehat{G}$.
+    Then
+    \[
+        \left<\chi,\psi\right>
+        =
+        \begin{cases}
+            1 & \text{if } \chi=\psi,    \\
+            0 & \text{if }\chi\neq \psi.
+        \end{cases}
+    \]
+    Thus the set $\widehat{G}$ forms an orthonormal basis for $\ell^2(G)$ which we call the Fourier Basis.
+\end{Corollary}
+\begin{proof}
+    By definition
+    \[
+        \left<\chi,\psi\right>
+        =\frac{1}{|G|}\sum_{x\in G}\chi(x)\overline{\psi(x)}
+        =\frac{1}{|G|}\sum_{x\in G}(\chi\overline{\psi})(x).
+    \]
+    Recall from the proof of Proposition \ref{charactersaregroup} that $\overline{\psi} = \psi^{-1}$.
+    The corollary now follows by substituting $\chi\psi^{-1}$ for $\chi$ in the first equation of the theorem.
+    Since the characters are orthogonal they are linearly independent in $\ell^2(G)$.
+    Using Propositions \ref{G is isomorphic to dual}  and \ref{dimension} we know $|\widehat{G}| = |G| = \dim \ell^2(G)$ hence the characters form a spanning set.
+\end{proof}
+
+The Fourier Basis is natural basis $\ell^2(G)$ for a number of reasons.
+It is orthonormal, which is a good property for any basis of a vector space to have, and since it consists of homomorphisms it ``knows" that $G$ is a group and not just some finite set.
+
+
+%: ----------------------------------------------------------------------
+%:          The Fourier Transform
+% -----------------------------------------------------------------------
+\section{The Fourier transform}
+Since the characters form an orthonormal basis for $\ell^2(G)$ we know that any $f\in \ell^2(G)$ can be written as $f=\sum_{x\in G} c_x \chi_x$, where $c_x = \langle f, \chi_x \rangle$.
+The Fourier transform of a function is the change of basis operator  which takes a character as input and outputs the coefficient, $c_x$, of that character.
+
+
+
+\begin{Definition} % Def: Fourier transform
+    The Fourier transform is a function  $\mathscr{F}: \ell^2(G) \to \ell^2(\widehat{G})$ defined by
+    \[
+        (\mathscr{F}f)(\chi)=\langle f,\chi \rangle
+    \]
+    for any $f\in \ell^2(G)$.
+\end{Definition}
+
+
+
+Since the inner product on $\ell^2(G)$ is linear in the first slot it follows that $\mathscr{F}$ is a linear map.
+The kernel of $\mathscr{F}$ is trivial because if $\left< f, \chi \right> = 0$ for all $\chi\in \widehat{G}$ then $f = \sum_{\chi\in\widehat{G}} \left< f, \chi \right>  \chi= 0$.
+This means that $\mathscr{F}$ is an injective linear map and, since $\ell^2(G)$ has the same dimension as $\ell^2(\widehat{G})$, we conclude that $\mathscr{F}$ is in fact a bijection.
+In other words $\mathscr{F}$ is a vector space isomorphism.
+
+\begin{Proposition} \label{linear} % Prop: Fourier transform bijective and linear
+    The map $\mathscr{F}:\ell^2(G) \to \ell^2(\widehat{G})$ is bijective and linear.
+\end{Proposition}
+
+
+
+%\begin{Proposition} % Prop: Fourier transform bijective and linear
+%       The map $\mathscr{F}:\ell^2(G) \to \ell^2(\widehat{G})$ is bijective and linear. 
+%\end{Proposition}
+%\begin{proof}
+%   The linearity of $\mathscr{F}$ follows from linearity of the inner product. The kernel of $\mathscr{F}$ is trivial because if $\left< f, \chi \right> = 0$ for all $\chi\in \widehat{G}$ then $f = \sum_{\chi\in\widehat{G}} \left< f, \chi \right>  \chi= 0$. Bijectivity now follows from the fact that $\dim \ell^2(G) = \dim \ell^2(\widehat{G})$. 
+%\end{proof}
+
+Unfortunately the notation $(\mathscr{F}f)(\chi)$ is a little cumbersome.
+We will define a different notation which uses the fact that we can index the characters of $\Zm$ by the elements of $\Zm$.
+
+
+
+\begin{Definition} % Def: hat notation
+    Let $G = \Zm$.
+    For every $f:G\to \C$ define $\widehat{f}: G\to \C$ by $\widehat{f}(x) = (\mathscr{F} f )(\chi_x) = \langle f, \chi_x\rangle$.
+\end{Definition}
+
+Note that $\widehat{f}(x)$ is not well defined if the domain of $f$ is an arbitrary abelian group.
+This is because there is no canonical isomorphism between $G$ and $\widehat{G}$ and therefore no God-given choice for what the character $\chi_x$  should be for a given $x\in G$.
+
+The next proposition gives us a formula for writing $f$ as a linear combination of the characters of $\Zm$.
+
+
+\begin{Proposition} % Prop: fhats = coefficients of f
+    Let $G = \Zm$.
+    Then
+    \[
+        f = \sum_{x \in G} \widehat{f}(x)\chi_x
+    \]
+    for all $f\in \ell^2(G)$.
+\end{Proposition}
+\begin{proof}
+    Note by definition $\widehat{f}(x) = \langle f, \chi_x \rangle $.
+    The proposition now follows since the $\chi_x$ form an orthonormal basis.
+\end{proof}
+
+Recall we can write $f\in \ell^2(\Z_n)$ as
+\[
+    f = \sum_{x\in \Z_n} f(x)\delta_x
+\]
+where $\delta_x(y) = 1$ if $x = y$ and $\delta_x(y) = 0$ otherwise.
+Hence the vector
+\[
+    \begin{pmatrix}
+        f(0)   \\
+        f(1)   \\
+        \vdots \\
+        f(n-1)
+    \end{pmatrix}
+    \in \C^n
+\]
+is the coordinate column of $f$ with respect to the delta-basis $\{\delta_x \mid x = 0, 1, \dots , n-1\}$.
+
+Similarly we can write
+\[
+    f = \sum_{x\in \Z_n} \widehat{f}(x)\chi_x
+\]
+so  the vector
+\[
+    \begin{pmatrix}
+        \widehat{f}(0)   \\
+        \widehat{f}(1)   \\
+        \vdots           \\
+        \widehat{f}(n-1)
+    \end{pmatrix}
+    \in \C^n
+\]
+is the coordinate column of $f$ with respect to the Fourier basis $\{\chi_x \mid x = 0, 1, \dots , n-1\}$.
+
+We defined the Discrete Fourier transform as a mapping from $\mathscr{F}:\ell^2(G) \to \ell^2(\widehat{G})$.
+This definition is fancier than necessary for most practical purposes.
+It is often simpler to view the Discrete Fourier Transform for $\mathbb{Z}_n$ as the change of basis matrix $\mathscr{F}_n \in \C^{n\times n}$ defined by
+\[
+    \mathscr{F}_n
+    =
+    \frac{1}{n}
+    \begin{bmatrix}
+        1      & 1              & 1                 & 1                 & \cdots & 1                     \\
+        1      & \omega_n       & \omega_n^2        & \omega_n^3        & \cdots & \omega_n^{n-1}        \\
+        1      & \omega_n^2     & \omega_n^4        & \omega_n^6        & \cdots & \omega_n^{2(n-1)}     \\
+        1      & \omega_n^3     & \omega_n^6        & \omega_n^9        & \cdots & \omega_n^{3(n-1)}     \\
+        \vdots & \vdots         & \vdots            & \vdots            & \ddots & \vdots                \\
+        1      & \omega_n^{n-1} & \omega_n^{2(n-1)} & \omega_n^{3(n-1)} & \cdots & \omega_n^{(n-1)(n-1)}
+    \end{bmatrix}
+\]
+which maps coordinate columns in the delta basis to coordinate columns in the Fourier basis
+\[
+    \begin{pmatrix}
+        f(0)   \\
+        f(1)   \\
+        \vdots \\
+        f(n-1)
+    \end{pmatrix}
+    \xmapsto{\mathscr{F}_n}
+    \begin{pmatrix}
+        \widehat{f}(0)   \\
+        \widehat{f}(1)   \\
+        \vdots           \\
+        \widehat{f}(n-1)
+    \end{pmatrix}.
+\]
+
+\begin{Remark}[The connection between the Fourier basis and polynomials]
+    There is a fundamental connection between polynomials and the Fourier Transform.
+
+    Consider the case where the group $G$ is the $n$-roots of unity under the group operation of complex multiplication.
+    That is, $G = \{\omega_n^j\mid j\in \{0, \dots , n-1\}\}$ where $\omega_n = \exp(2\pi i /n)$ and $i=\sqrt{-1}$.
+    It is easy to see that all the homomorphisms from $G$ to $\C^*$ are of the from $x\mapsto x^j$ where $j\in \{0, 1, \dots , n-1\}$.
+    This means that the space $\ell^2(G)$ is equal to $\noit{span}_{\C}\{1, x, x^2, \dots , x^{n-1}\}$.
+    In other words, $\ell^2(G)$ is the set of all polynomials of degree less than $n$ with complex coefficients.
+    The Fourier coefficients are the coefficients of the polynomial.
+
+    This has implications for interpolation of polynomials.
+    Given a polynomial of degree less than $n$
+    \[
+        f(x) = a_nx^{n-1} + a_{n-2}x^{n-2} + \cdots + a_0 \in \C[x],
+    \]
+    if we know the values $f(1), f(\omega_n), f(\omega_n^2), \dots f(\omega_n^{n-1})$ then one way of finding the coefficients $a_0, a_1, \dots , a_{n-1}$ of $f$ is to solve a system of linear equations over $\C$.
+    Another way is to identify the polynomial $f$ with a function
+    \[
+        f:\{1, \omega_n, \omega_n^2, \dots , \omega_n^{n-1}\} \to \C
+    \]
+    which we then identify with
+    \[
+        f:\Z_n \to \C
+    \]
+    and then, from the previous discussion, the Fourier coefficients of $f:\Z_n \to \C$ are precisely the coefficients of the polynomial $f\in \C[x]$, i.e.
+    \[
+        \widehat{f}(j) = a_j.
+    \]
+    Thus interpolating a polynomial is the same as finding the Fourier coefficients of the function $f:\{1, \omega_n, \omega_n^2, \dots, \omega_n^{n-1} \} \to \C$ defined by the polynomial.
+    In Section ?? we will use this equivalence to efficiently compute the Fourier transform of a function.
+
+    Multivariate polynomials can be viewed as functions from $\Zm$ to $\C$ and their coefficients are the Fourier coefficients of the function they represent.
+\end{Remark}
+
+We will now show that the Fourier Basis interacts well with the convolution operator.
+
+\begin{Proposition}
+    Let $G = \Zm$.
+    Let $f:G\to \C$.
+    Define an operato $A_f:\ell^2(G)\to \ell^2(G)$
+    by
+    \[
+        A_fg = f*g.
+    \]
+    Then the characters $\chi_x\in \widehat{G}$ diagonalise $A_f$.
+    Each $\chi_x\in \widehat{G}$ is an eigenvector of $A_f$ and its corresponding eigenvalue is $\widehat{f}(x)$.
+\end{Proposition}
+\begin{proof}
+    For all $y\in G$ we have
+    \begin{align*}
+        (A_f\chi_x) (y)
+          & = (f*\chi_x)(y)                                                              \\
+          & = \frac{1}{|G|}\sum_{z\in G}f(z)\chi_x(y-z)                                  \\
+          & = \frac{1}{|G|}\sum_{z\in G}f(z)\chi_x(y)\overline{\chi_x(z)}                \\
+          & = \left(\frac{1}{|G|}\sum_{z\in G}f(z)\overline{\chi_x(z)} \right) \chi_x(y) \\
+          & = \langle f, \chi \rangle \chi_x(y)                                          \\
+          & = \widehat{f}(x)\chi(y),                                                     \\
+    \end{align*}
+    as required.
+\end{proof}
+
+We have seen in Proposition \ref{linear} that the Fourier transform respects the addition and scalar multiplication in $\ell^2(G)$.
+Propositions \ref{convolution = pointwise mult} through \ref{scaling} prove some of the fundamental properties of the Fourier transform.
+The proofs of these propositions are not that interesting; they are mostly just calculations.
+
+The first of these propositions shows us how the Fourier transform interacts with the convolution operator.
+
+\begin{Proposition} \label{convolution = pointwise mult}% Prop: convolution in time domain = multiplication in frequency domain 
+    Let $G = \Zm$.
+    Then
+    \[
+        (\widehat{f * g})(x) = \widehat{f}(x)\widehat{g}(x)
+    \]
+    for every $f, g\in \ell^2(G)$ and every $x\in G$.
+\end{Proposition}
+\begin{proof}
+    Let $f, g\in \ell^2(G)$.
+    Let $x\in G$.
+    Then
+    \begin{align*}
+        (\widehat{f*g})(x)
+          & = \langle f * g, \chi_x \rangle                                                                          \\
+          & = \frac{1}{|G|}\sum_{y\in G} (f*g)(y)\overline{\chi_x(y)}                                                \\
+          & = \frac{1}{|G|}\sum_{y \in G} \left( \frac{1}{|G|} \sum_{z\in G} f(z)g(y-z) \right) \overline{\chi_x(y)} \\
+          & = \frac{1}{|G|^2} \sum_{y,z\in G} f(z)g(y-z)\overline{\chi_x(y)}                                         \\
+        \intertext{using the change of variables $w=y-z$ we get}
+          & = \frac{1}{|G|^2} \sum_{w,z\in G} f(z)g(w)\overline{\chi_x(w+z)}                                         \\
+          & = \frac{1}{|G|^2} \sum_{w,z\in G} f(z)g(w)\overline{\chi_x(w)}\overline{\chi_x(z)}                       \\
+          & = \frac{1}{|G|}\sum_{z\in G}f(z)\overline{\chi_x(z)}\frac{1}{|G|}\sum_{w\in G}g(w)\overline{\chi_x(w)}   \\
+          & = \langle f, \chi_x \rangle \langle g, \chi_x \rangle                                                    \\
+          & =\widehat{f}(x)\widehat{g}(x).
+    \end{align*}
+\end{proof}
+
+Parsevals identity gives a relationship between the functions value and the Fourier coefficients.
+
+\begin{Proposition}[Parseval's Identity] % Prop: Parseval's Identity
+    Let $G = \Zm$.
+    Let $f\in \ell^2(G)$.
+    Then
+    \[
+        \frac{1}{|G|}\sum_{x\in G}|f(x)|^2 = \sum_{x \in G}|\widehat{f}(x)|^2.
+    \]
+\end{Proposition}
+\begin{proof}
+    We have
+    \begin{align*}
+        \frac{1}{|G|}\sum_{x\in G}|f(x)|^2
+          & = \langle f, f \rangle                                            \\
+          & = \langle \sum_{x\in G}\widehat{f}(x)\chi_x , f \rangle           \\
+          & = \sum_{x\in G} \widehat{f}(x)\langle \chi_x ,f\rangle            \\
+          & = \sum_{x\in G} \widehat{f}(x)\overline{\langle f, \chi_x\rangle} \\
+          & = \sum_{x\in G} \widehat{f}(x)\overline{\widehat{f}(x)}           \\
+          & = \sum_{x\in G}|\widehat{f}(x)|^2.
+    \end{align*}
+\end{proof}
+There are two other useful forms of Parseval's theorem which we state in the corollaries below for easy reference later.
+\begin{Corollary}
+    Let $G$ and $f$ be as above. Then $\frac{1}{|G|}\left<f,f\right> = \left<\widehat{f}, \widehat{f}\right>$.
+\end{Corollary}
+\begin{Corollary}
+    Let $G$ and $f$ be as above. Then $\frac{1}{|G|}\| f\|_2^2 = \|\widehat{f}\|_2^2$.
+\end{Corollary}
+
+
+\begin{Proposition} % Prop:  time domain shift = multiplication by character in frequency domain
+    Let $s\in G$. Let  $f\in \ell^2(G)$. Define $g : G \to \C$ by $g(x) = f(s+x)$. Then $\widehat{g}(x) = \chi_x(s)\widehat{f}(x)$.
+\end{Proposition}
+\begin{proof}
+    We have
+    \begin{align*}
+        \widehat{g}(x)
+          & = \langle g, \chi_x \rangle                                                    \\
+          & = \frac{1}{|G|} \sum_{y\in G} g(y) \overline{\chi_x(y)}                        \\
+          & = \frac{1}{|G|}\sum_{y\in G}f(s+y)\overline{\chi_x(y)}                         \\
+          & = \frac{1}{|G|} \sum_{w\in G} f(w) \overline{\chi_x(w-s)}                      \\
+        \intertext{substituting $w = y+s$}
+          & = \frac{1}{|G|} \sum_{w\in G} f(w) \overline{\chi_x(w)}\overline{\chi_x(-s)}   \\
+          & = \frac{1}{|G|} \sum_{w\in G} f(w) \overline{\chi_x(w)}\overline{\chi_{-s}(x)} \\
+          & = \frac{1}{|G|} \sum_{w\in G} f(w) \overline{\chi_x(w)} \chi_x(s)              \\
+          & = \chi_x(s)\frac{1}{|G|} \sum_{w\in G} f(w) \overline{\chi_x(w)}.
+    \end{align*}
+\end{proof}
+
+
+\begin{Proposition} \label{scaling} % Prop: Scaling in time domain = scaling by inverse in frequency domain
+    Let $s\in \Z_n^*$. Let $f\in \ell^2(\Z_n)$. Define $g:\Z_n\to \C$ by $g(x) = f(sx)$. Then $\widehat{g}(x) = \widehat{f}(s^{-1}x)$.
+\end{Proposition}
+\begin{proof}
+    We have
+    \begin{align*}
+        \widehat{g}(x) & = \langle g, \chi_x\rangle                                      \\
+                       & = \frac{1}{n}\sum_{y\in  \Z_n} g(y)\overline{\chi_x(y)}         \\
+                       & =\frac{1}{n}\sum_{y\in  \Z_n} f(sy)\overline{\chi_x(y)}         \\
+        \intertext{We use the change of variables $z=sy$. Since $s\in \Z_n^*$ we know that $z$ ranges over $\Z_n$ as $y$ ranges over $\Z_n$.}
+                       & =\frac{1}{n}\sum_{y\in  \Z_n} f(sy)\overline{\chi_x(y)}         \\
+                       & = \frac{1}{n}\sum_{z\in  \Z_n} f(z)\overline{\chi_x(s^{-1}z)}   \\
+                       & = \frac{1}{n}\sum_{z\in  \Z_n} f(y)\overline{\chi_{s^{-1}x}(z)} \\
+                       & = \langle f, \chi_{s^{-1}x}\rangle                              \\
+                       & = \widehat{f}(s^{-1}x).
+    \end{align*}
+
+\end{proof}
+
+\section[Quotient groups]{Quotient groups and the Poisson summation formula}
+
+
+We now turn our attention to classifying the duals of quotient groups. This will give us the results we need to prove the finite analogue of the Poisson summation formula.  It turns out we can identify the duals of all the quotients of $G$ with subgroups of $\widehat{G}$.
+
+\begin{Definition} % Def: H^#
+    Let $G$ be a finite, abelian group and let $H\leq G$ be a subgroup of $G$. Define
+    $$H^\# =\{\chi\in \widehat{G}\mid \chi(h)=1\text{ for all }h\in H\}.$$
+\end{Definition}
+
+In the next proposition we use the notation $\overline{\chi}$ to refer to a character defined on a quotient of $G$. Everywhere else the notation $\overline{\chi}$ refers to the conjugate character defined by $\overline{\chi}(x) = \overline{\chi(x)}$ as in Definition \ref{conjugate character}.
+
+\begin{Proposition} \label{dual} % H^# = dual of G/H
+    Let $G$ be a finite, abelian group and let $H\leq G$ be a subgroup of $G$. For each $\chi\in H^\#$ define $\overline{\chi}:G/H\to \C^*$ by $\overline{\chi}(g+H) = \chi(g)$. Then $\overline{\chi}$ is well defined and
+    $$H^\#\cong \widehat{G/H}$$ under the map $\chi\mapsto \overline{\chi}$.
+\end{Proposition}
+\begin{proof}
+    Define $\phi: H^\# \to \widehat{G/H}$ by $\phi(\chi) = \overline{\chi}$. Let $\chi\in H^\#$. Since $\chi(h) = 1$ for all $h\in H$ the function $\overline{\chi}$ is well defined. The map $\phi$ is a homomorphism since $\overline{\chi\psi}(g+H) = \chi\psi(g) = \chi(g)\psi(g) = \overline{\chi}(g+H)\overline{\psi}(g+H).$ Define $\theta : \widehat{G/H} \to H^\#$ by $\theta(\psi)(g) = \psi(g+H)$. Then $\theta(\psi)$ is identically 1 on $H$, so the map is well defined. It is easy to show that $\theta$ is the inverse of $\phi$, thus $\phi$ is bijective. This completes the proof.
+\end{proof}
+
+\begin{Definition} \label{Hperp}
+    Let $G = \Zm$. Let $H\leq G$. Define
+    \[
+        H^\perp = \{x\in G\mid \chi_x\in H^\#\}.
+    \]
+\end{Definition}
+
+Let $G = \Z_n$. Then any $H\leq G$ is generated by a single element $H = \langle a \rangle $. Without loss of generality we may assume $a$ divides $n$, hence $H^\perp = \langle n/a\rangle$.  Moreover, if $K$ is a subgroup of some group $J$ then $(H\times K)^\perp = H^\perp \times K^\perp\leq G\times J$, so given generators for any subgroup of $\Zm$ it is easy to find $H^\perp$.
+
+Now that we have defined $H^\perp$ we can prove a generalisation of the orthogonality relations in Proposition \ref{orthogonality}.
+
+\begin{Proposition} \label{generalised orthogonality}
+    Let $G = \Zm$. Let $H\leq G$. Then
+    \[
+        \sum_{h\in H}\chi_h(x) = \begin{cases}
+            |H|, & \text{if }x\in H^\perp, \\
+            0,   & \text{otherwise.}
+        \end{cases}
+    \]
+\end{Proposition}
+\begin{proof}
+    If $x\in H^\perp$ then, by definition of $H^\perp$, we have $\chi_x(h)=1$ for all $h\in H$. Hence by Remark \ref{chiy(x)=chix(y)} we have $\chi_h(x)=1$ for all $h\in H$. If $x\not\in H^\perp$ then, by definition of $H^\perp$, there exists some $h'\in H$ for which $\chi_{x}(h') \neq 1$. Then
+    \[
+        \sum_{h\in H}\chi_{h}(x) = \sum_{h\in H}\chi_{h+h'}(x) = \chi_{h'}(x)\sum_{h\in H}\chi_h(x)=\chi_x(h')\sum_{h\in H}\chi_h(x)
+    \]
+    which implies that $\sum_{h\in H}\chi_{h}(x) =0$.
+
+\end{proof}
+
+
+\begin{Proposition}[Poisson summation formula]
+    Let $G = \Zm$.
+    Let $f:G\to \C$.
+    Let $H\leq G$.
+    Then
+    \[
+        \sum_{h\in H}\widehat{f}(h)\chi_{h}(x) = \frac{1}{|G:H|}\sum_{y\in H^\perp}f(x-y).
+    \]
+\end{Proposition}
+
+We will actually prove a slightly more general version of the Poisson summation formula where the sum on the left hand side of the equation is a sum over a coset instead of a subgroup.
+
+\begin{Proposition} \label{generalised poisson}
+    Let $G = \Zm$.
+    Let $f:G\to \C$.
+    Let $H\leq G$.
+    Let $\alpha\in G$.
+    Then
+    \[
+        \sum_{h\in H}\widehat{f}(\alpha+h)\chi_{\alpha+h}(x) = \frac{1}{|G:H|}\sum_{y\in H^\perp}f(x-y)\chi_\alpha(y).
+    \]
+\end{Proposition}
+\begin{proof}
+    Define $g:G\to \C$ by $g(x) = \sum_{h\in H}\chi_{\alpha+h}(x)$. Then Proposition \ref{convolution = pointwise mult} tells us that $(\widehat{f*g})(\alpha) = \widehat{f}(\alpha)\widehat{g}(\alpha)$ so
+    \[
+        \sum_{h\in H}\widehat{f}(\alpha+h)\chi_{\alpha+h}(x) = (f*g)(x).
+    \]
+    Now since the mapping $x\mapsto \chi_x$ is an isomorphism we know $\chi_{\alpha+h}(x) = \chi_{\alpha}(x)\chi_{h}(x)$. Hence $g(x) = \chi_\alpha(x)\sum_{h\in H}\chi_h(x)$.  It follows from Proposition \ref{generalised orthogonality} that
+    \[
+        g(x) = \begin{cases}\chi_{\alpha}(x)\cdot |H|, & \text{if }x\in H^\perp, \\0 & \text{otherwise.} \end{cases}
+    \]
+    Putting this all together we get
+    \[
+        (f*g)(x) = (g*f)(x) = \frac{1}{|G|}\sum_{y\in G}g(y)f(x-y) = \frac{|H|}{|G|}\sum_{y\in H^\perp}\chi_\alpha(y)f(x-y)
+    \]
+    which is the right hand side of the equation.
+\end{proof}
+
+The Poisson summation formula is now an immediate consequence of Proposition \ref{generalised poisson} by substituting $\alpha=0$.
+
+\section{Computing the Fourier Transform}
+For the section we will assume the finite, abelian group $G$ is $\Z_n$, where $n$ is an integer power of 2.
+We assume this for simplicity, not because the Fourier transform can not be efficiently computed for other finite, abelian groups.
+The algorithms presented in this section can be generalised to non-cyclic abelian groups without too much difficulty, provided the order of the group is smooth (only small primes divide it).
+
+We want an algorithm which given the complex numbers $f(0), f(1), \dots , f(n-1)$ as input, outputs $\widehat{f}(0), \widehat{f}(1), \dots , \widehat{f}(n-1)$.
+
+Recall that, by definition
+\[
+    \widehat{f}(x)
+    = \langle f, \chi_x\rangle
+    = \frac{1}{|G|}\sum_{z = 0}^{n-1} f(z)\overline{\chi_x(z)}
+    = \frac{1}{|G|}\sum_{z = 0}^{n-1} f(z)\omega_n^{-xz},
+\]
+
+where $\omega_n = \exp(2\pi i /n)$ and $i = \sqrt{-1}$.
+We will ignore the factor of $1/|G|$ and simply state our the computational problem we are trying to solve like this:
+%\begin{minipage}[-15em]
+%       \textbf{Fourier Transform Algorithm:} Given an array of complex numbers $x = [x_0, x_2, \cdots , x_{n-1}]$ as input, output the array $X = [X_0, X_1, \dots , X_{n-1}]$ where
+%   \[
+%       X_k = \sum_{j = 0}^{n-1} x_j\omega_n^{-jk}.
+%   \]
+%\end{minipage}
+
+\begin{mdframed}
+    \textbf{Fourier Transform Algorithm:} Given an array of complex numbers $x = [x_0, x_1, x_2, \dots , x_{n-1}]$ as input, output the array $X = [X_0, X_1, \dots , X_{n-1}]$ where
+    \begin{equation}\label{fourier equation}
+        X_k = \sum_{j = 0}^{n-1} x_j\omega_n^{-jk}.
+    \end{equation}
+\end{mdframed}
+We will assume that adding or multiplying two complex numbers and computing $\omega_n^{-jk}$ takes $O(1)$ time.
+We will not worry about numerical precision in our analysis.
+
+\subsection{The Fast Fourier Transform}
+
+
+If we just directly compute each $X_k$ using Equation (\ref{fourier equation}) this will take $O(n^2)$ time since each $X_k$ requires $n$ multiplications and additions to compute and $k$ ranges from 0 to $n-1$.
+
+
+To achieve $O(n\log n)$ time algorithm we first reduce the problem of calculating the Fourier Tranform to evaluating a polynomial at the $n$-th roots of unity.
+Given some array of complex numbers $x = [x_0, x_1, \dots , x_{n-1}]$ define the polynomial
+\[
+    p(t) = \sum_{j=0}^{n-1} x_jt^j.
+\]
+
+Then the Fourier tranform of $x$ is the array $X$ where
+\[
+    X_k
+    = \sum_{j = 0}^{n-1} x_j\omega_n^{-jk}
+    = \sum_{j = 0}^{n-1} x_j\omega_n^{j(n-k)}
+    = \sum_{j = 0}^{n-1} x_j(\omega_n^{n-k})^j
+    =p(\omega_n^{n-k}),
+\]
+so
+\[
+    X = [X_0, X_1, \dots , X_{n-1}] = [p(\omega_n^0), p(\omega_n^{n-1}), p(\omega_n^{n-2}),\dots , p(\omega_n^{1})].
+\]
+
+Thus calculating $X$ is the same as evaluating the polynomial $p$ at all the $n$-th roots of unity.
+We can now restate the problem we are trying to solve.
+
+\begin{mdframed}
+    \textbf{Evaluate Polynomial Problem:}
+
+    \textbf{Input:}
+    An array of complex numbers $[p_0, p_1 , \dots , p_{n-1}]$ where $n = 2^k$ is an integer power of two.
+
+    \textbf{Output:}
+    The array of complex numbers $[p(\omega_n^0), p(\omega_n^{n-1}), \dots , p(\omega_n^1)]$ where $p(t) \in \C[x]$ is the polynomial defined by
+    \[
+        p(t) = \sum_{j=0}^{n-1} p_jt^j.
+    \]
+    That is, evaluate $p(t)$ at all the $n$-th roots of unity.
+\end{mdframed}
+The evaluate polynomial problem can be done as follows:
+\begin{itemize}
+    \item Define the polynomials $p_{even}$ and $p_{odd}$ to be the polynomials containing only the even or odd terms if $p$ respectively, i.e.
+          \[
+              p_{even}(t) = \sum_{\substack{j= 0, 2, 4, \dots , n-2}}p_jt^j
+          \]
+          and
+          \[
+              p_{odd}(t) = \sum_{\substack{j = 1, 3, 5, \dots , n-1}}p_jt^j.
+          \]
+          Then
+          \[
+              p(t) = p_{even}(t^2)+tp_{odd}(t^2).
+          \]
+          so
+          \begin{equation} \label{recurrence}
+              p(\omega_n^k) = p_{even}(\omega_n^{2k})+\omega_n^k p_{odd}(\omega_n^{2k})
+          \end{equation}
+
+    \item Recursively evaluate $p_{even}(t)$ at the $n/2$-th roots of unity, i.e. compute the
+          \[
+              [p_{even}(\omega_{n/2}^0), \dots , p_{even}(\omega_{n/2}^{n/2-1})].
+          \]
+
+    \item Recursively evaluate $p_{odd}(t)$ at the $n/2$-th roots of unity, i.e. compute the array
+          \[
+              [p_{odd}(\omega_{n/2}^0), \dots , p_{odd}(\omega_{n/2}^{n/2-1})].
+          \]
+
+    \item Evaluate $p$ at each root of unity using the formula
+          \[
+              p(\omega_n^k) = p_{even}(\omega_{n/2}^{2k \bmod{n/2}})+ \omega_{n}^k p_{odd}(\omega_{n/2}^{2k \bmod{n/2}}).
+          \]
+          which holds because of equation (\ref{recurrence}).
+\end{itemize}
+
+The pseudocode for this is given below.
+
+\begin{center}
+    \begin{algorithm}[H]
+        \caption{RecEvaluate \label{RecEvaluate}}
+        \DontPrintSemicolon
+        \KwIn{An array of complex numbers $[p_0, p_1, \dots , p_{n-1}]$ which are the coefficients of the polynomial $p(t)\in \C[x]$.}
+        \KwOut{The array $[p(\omega_n^0), p(\omega_n^{n-1}), \dots , p(\omega_n^{1})]$.}
+        \eIf{$p$ is a constant polynomial}{
+        \Return{The array $[p_0]$}
+        } {
+        Construct the coefficient array for $p_{even}$ and $p_{odd}$ \tcc*[r]{O(n) time}
+        \;
+        Calculate $[p_{even}(\omega_{n/2}^0), \dots , p_{even}(\omega_{n/2}^{n/2-1})]$ by recursively calling  $\noit{RecEvaluate}([p_0, p_2, \dots , p_{n-2}])$ \;
+
+        Calculate $[p_{odd}(\omega_{n/2}^0), \dots , p_{odd}(\omega_{n/2}^{n/2-1})]$ by recursively calling  $\noit{RecEvaluate}([p_1, p_3, \dots , p_{n-1}])$ \;
+        \;
+
+        \For{ each root of unity $\omega_n^k$} {
+        Calculate $p(\omega_n^k) = p_{even}\left(\omega_{n/2}^{2k \pmod{n/2}}\right)+\omega_{n}^kp_{odd}\left(\omega_{n/2}^{2k \pmod{n/2}}\right)$
+        } \tcc*[r]{O(n) time}
+
+        \Return{The array $[p(\omega_n^0), p(\omega_n^{n-1}), \dots , p(\omega_n^{1})]$}
+        }
+    \end{algorithm}
+\end{center}
+
+We will now anlyse the running time if this algorithm.
+Let $T(n)$ be the running time of the algorithm when the input array has length $n$.
+That is, $T(n)$ is the time it takes to compute $\noit{RecEvaluate}([p_0, p_1, \dots , p_{n-1}]$.
+\begin{itemize}
+    \item Constructing the arrays $[p_0, p_2, \dots , p_{n-2}]$ and $[p_1, p_3, \dots , p_{n-1}]$ takes $O(n)$ time.
+    \item Calculating $[p_{even}(\omega_{n/2}^0), \dots , p_{even}(\omega_{n/2}^{n/2-1})] = \noit{RecEvaluate}([p_0, p_2, \dots , p_{n-2}])$ and $[p_{odd}(\omega_{n/2}^0), \dots , p_{odd}(\omega_{n/2}^{n/2-1})] = \noit{RecEvaluate}([p_1, p_3, \dots , p_{n-1}])$ each take $T(n/2)$ time since their input arrays have size $n/2$.
+    \item Constructing array $[p(\omega_n^0), p(\omega_n^{n-1}), \dots , p(\omega_n^{1})]$ using the formula
+          \[
+              p(\omega_n^k) = p_{even}\left(\omega_{n/2}^{2k \pmod{n/2}}\right)+\omega_{n}^kp_{odd}\left(\omega_{n/2}^{2k \pmod{n/2}}\right)
+          \] takes $O(n)$ time.
+    \item So we have the recurrence $T(n) = 2T(n/2) + O(n)$.
+    \item Using case 2 of the Master Theorem below this means $T(n) = O(n\log n)$.
+\end{itemize}
+
+\begin{Theorem}[Master Theorem]
+    Let $a \geq 1$.
+    Let $b\geq 1$.
+    Let $f:\N \to \R$.
+    Suppose $T:\N \to \R$ satisfies the recurrence
+    \[
+        T(n) = aT(n/b) + f(n),
+    \]
+    where we interpret $n/b$  to mean $\lfloor n / b \rfloor$ or $\lceil n / b \rceil$.
+    Then $T(n)$ has the following asymptotic bounds:
+    \begin{enumerate}
+        \item If $f(n) = O(n^{\log_b a - \epsilon})$ for some constant $\epsilon > 0$, then $T(n) = \Theta(n^{\log_b a})$.
+        \item If $f(n) = \Theta(n^{\log_b a})$, then $T(n) = \Theta(n^{\log_b a} \log n)$.
+        \item If $f(n) = \Omega(n^{\log_b a + \epsilon})$ for some constant $\epsilon >0$, and if $af(n/b) \leq cf(n)$ for some constant $c < 1$ and all sufficiently large $n$ then $T(n) = \Theta(f(n)$.
+    \end{enumerate}
+\end{Theorem}
+
+Now that we know how to evaluate any degree $n-1$ polynomial at the $n$-th roots of unity the algorithm for calculating the discrete Fourier transform is easy.
+
+\begin{center}
+    \begin{algorithm}[H]
+        \caption{FFT \label{FFT}}
+        \DontPrintSemicolon
+        \KwIn{An array of complex numbers $x = [x_0, x_1, \dots , x_{n-1}]$.}
+        \KwOut{
+        The array $X = [X_0, X_1, \dots , X_{n-1}]$ where
+        $
+            X_k = \sum_{j = 0}^{n-1} x_j\omega_n^{-jk}.
+        $
+        }
+        \Return{The array $\noit{RecEvaluate}([x_0, x_1, \dots , x_{n-1}])$}
+    \end{algorithm}
+\end{center}
+
+This algorithm is known as the Fast Fourier Transform.
+
+
+
+
+
+%\bibliographystyle{ieeetr}
+%\bibliography{\myreferences}
+\end{document}
