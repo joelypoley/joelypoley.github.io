@@ -32,9 +32,9 @@ This bug disturbed me, not because bugs like this are so unusual, but because no
 
 I was already aware that left shifting off the end of a *signed* integer is undefined behavior but I thought that left shifting off the end of unsigned integers was perfectly well defined, the most significant bits just get discarded. From [cpprefence.com](https://en.cppreference.com/w/):
 
-> For unsigned a, the value of a << b is the value of a * 2b, reduced modulo 2N where N is the number of bits in the return type (that is, bitwise left shift is performed and the bits that get shifted out of the destination type are discarded).
+> For unsigned a, the value of a << b is the value of a * 2<sup>b</sup>, reduced modulo 2<sup>N</sup> where N is the number of bits in the return type (that is, bitwise left shift is performed and the bits that get shifted out of the destination type are discarded).
 
-According to cppreference, my function should simply push the single set bit `unit64_t(1)` off the end and return 0 every time. Since `str_to_square` clearly wasn't doing this, my next step was to run my program with the [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html). I got the following warning.
+According to cppreference, my function should simply push the single set bit `uint64_t(1)` off the end and return 0 every time. Since `str_to_square` clearly wasn't doing this, my next step was to run my program with the [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html). I got the following warning.
 
 ```
 runtime error: shift exponent 384 is too large for 64-bit type 'uint64_t' (aka 'unsigned long')
@@ -44,7 +44,7 @@ Which confirmed that I was indeed invoking undefined behavior.
 
 After consulting the [C++ standard](http://www.open-std.org/Jtc1/sc22/wg21/docs/papers/2014/n4296.pdf) (something I had been trying to avoid doing) I still did not understand. Paragraph 5.8.2 says:
 
-> 5.8.2 The value of E1 << E2 is E1 left-shifted E2 bit positions; vacated bits are zero-filled. If E1 has an unsigned type, the value of the result is E1 × 2E2, reduced modulo one more than the maximum value representable in the result type. Otherwise, if E1 has a signed type and non-negative value, and E1 × 2E2 is representable in the corresponding unsigned type of the result type, then that value, converted to the result type, is the resulting value; otherwise, the behavior is undefined.
+> 5.8.2 The value of E1 << E2 is E1 left-shifted E2 bit positions; vacated bits are zero-filled. If E1 has an unsigned type, the value of the result is E1 × 2<sup>E2</sup>, reduced modulo one more than the maximum value representable in the result type. Otherwise, if E1 has a signed type and non-negative value, and E1 × 2<sup>E2</sup> is representable in the corresponding unsigned type of the result type, then that value, converted to the result type, is the resulting value; otherwise, the behavior is undefined.
 
 This paragraph only mentions undefined behavior for signed integers, but I was using unsigned integers so it shouldn't affect me.
 

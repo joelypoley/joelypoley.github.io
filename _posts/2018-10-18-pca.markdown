@@ -7,7 +7,7 @@ title:  "Principal component analysis: pictures, code and proofs"
 
 ## I.
 
-Principal component analysis is a form of [feature engineering](https://en.wikipedia.org/wiki/Feature_engineering) that reduces the number of dimensions needed to represent your data. If a network has fewer inputs then there are less weights to train, which makes it easier and faster to train the model.
+Principal component analysis is a form of [feature engineering](https://en.wikipedia.org/wiki/Feature_engineering) that reduces the number of dimensions needed to represent your data. If a neural network has fewer inputs then there are less weights to train, which makes it easier and faster to train the model.
 
 ![scatter plot](/assets/plot1.png)
 
@@ -19,7 +19,7 @@ The first step in principal component analysis is to center the data. Given the 
 
 ![scatter plot](/assets/plot3.png)
 
-We then put the data in a matrix.
+We then put the data in a matrix
 $$
 X = \begin{pmatrix}
 | & | &  & | \\
@@ -38,25 +38,25 @@ And draw an ellipse around the eigenvectors.
 
 ![scatter plot](/assets/plot6.png)
 
-The eigenvalues tell us how spread out the data is in the direction of that particular eigenvalue. Thus we can reduce the dimension of the data by projecting onto the line given by the largest eigenvalue.
+The eigenvalues tell us how spread out the data is in the direction of that particular eigenvector. Thus we can reduce the dimension of the data by projecting onto the line given by the largest eigenvalue.
 
 ![scatter plot](/assets/plot7.png)
 
 The data is now one dimensional since it fits on a single line. Each point has not moved too far from its original spot, so these new points still represent the data well.
 
-In two dimensions this is the same as projecting onto the line of best fit, but this technique generalizes. If your data is \\(n\\)-dimensional then PCA lets you find the best \\(m\\)-dimensional subspace to project the data down onto; you just project your data onto the subspace spanned by the \\(m\\) eigenvectors with the largest eigenvalues. If \\(m << n\\) this can compress your data a lot, and PCA guarantees that this \\(m\\) dimensional subspace is optimal, in the sense that it minimizes the mean squared error between the original data points and the projected data points.
+In two dimensions this is the same as projecting onto the line of best fit, but this technique generalizes. If your data is \\(n\\)-dimensional then PCA lets you find the best \\(m\\)-dimensional subspace to project the data down onto; you just project your data onto the subspace spanned by the \\(m\\) eigenvectors with the largest eigenvalues. If \\(m < < n\\) this can compress your data a lot, and PCA guarantees that this \\(m\\) dimensional subspace is optimal, in the sense that it minimizes the mean squared error between the original data points and the projected data points.
 
 # II.
 
 The data in the plots above was generated using a random number generator. Let's try PCA on a real dataset.
 
-We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will discard images of 2,3,4,5,6,7,8,9 and only look at images of 0 and 1 in the dataset. Below are some examples of the images from MNIST.
+We will use the MNIST dataset, which is a collection of grayscale, 28x28 images of hand written digits. To simplify the analysis we will discard images of 2,3,4,5,6,7,8,9 and only look at images of 0 and 1. Below are some examples of the images from MNIST.
 
 ![scatter plot](/assets/plot8.png)
 
 To process the images we will:
 
- * Flatten each image into a $$784 = 28\times 28$$ vector.
+ * Flatten each image into a $$784 = 28\times 28$$ dimensional vector.
  * Use PCA to project each 784-dimensional vector to a 2-dimensional vector.
  * Plot the 2 dimensional vectors, with images of '0' in red and images of '1' in blue.
 
@@ -86,6 +86,7 @@ $$
     \end{pmatrix}.
 $$
 
+This matrix can be diagonalized \\(XX^\top = UDU^{-1}\\) where \\(U\\) is a change of basis matrix and \\(D = \operatorname{diag}(\lambda_1, \cdots , \lambda_n)\\) is diagonal.
 We can view the change of basis as creating new features \\(p_1', p_2', \dots , p_{748}'\\) from the original pixels. And the diagonal matrix is the covariance matrix for these new features.
 
 Since \\(\langle p_i', p_j' \rangle = 0\\) for \\(i \neq j\\) the features are independent, and the variance of \\(p_i'\\) is \\(\langle p_i', p_i' \rangle = \lambda_i\\).
@@ -107,10 +108,10 @@ x_1 & x_2 &\cdots & x_n \\
 $$
 
  be the \\(d \times n\\) matrix where each column is a data point.
-Let \\(W = XX^\top\\) (the \\(\frac{1}{n-1}\\) factor from before does not affect the eigenvectors or order of the eigenvalues).
+Let \\(W = XX^\top\\) (the \\(\frac{1}{n-1}\\) factor from before does not affect the eigenvectors or the relative order of the eigenvalues).
 Then \\(W\\) is [positive semidefinite](https://en.wikipedia.org/wiki/Positive-definite_matrix#Positive_semidefinite) and hence has eigenvectors \\(u_1, \dots , u_d\\) which form an [orthonormal basis](https://en.wikipedia.org/wiki/Orthonormal_basis) for \\(\mathbb{R}^d\\).
 Let \\(\lambda_1, \dots , \lambda_d\\) be the corresponding eigenvalues and without loss of generality assume \\(\lambda_1 \geq \lambda_2 \cdots \geq \lambda_d\\).
-The *projection error* for \\(x_i\\) onto a subspace \\(V \subset \mathbb{R}^d\\) is defined as $$ \|x_i - P_Vx_i\|_2^2 $$ where \\(P_V:\mathbb{R}^d \to \mathbb{R}^d\\) is the projection operator.
+The *projection error* for \\(x_i\\) onto a subspace \\(V \subset \mathbb{R}^d\\) is defined as $$ \|x_i - P_Vx_i\|_2^2 $$ where \\(P_V:\mathbb{R}^d \to \mathbb{R}^d\\) is the projection-onto-\\(V\\) operator.
 Then for any positive integer \\(m < d\\) the subspace $$ U_m := \operatorname{span}\{u_1, \dots , u_m\} $$ minimizes the sum of the projection errors. In symbols,
 
 $$
