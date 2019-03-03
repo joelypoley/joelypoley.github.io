@@ -4,4 +4,4 @@ title: About
 permalink: /about/
 ---
 
-Nothing here yet!
+I'm a software engineer from New Zealand.
