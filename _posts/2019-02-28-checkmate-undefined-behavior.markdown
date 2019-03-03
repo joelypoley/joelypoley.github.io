@@ -74,6 +74,6 @@ The left shift is being done by the `shl` instruction. Helpfully, if you right c
 
 > The destination operand can be a register or a memory location. The count operand can be an immediate value or the CL register. The count is masked to 5 bits (or 6 bits if in 64-bit mode and REX.W is used).
 
-I finally had my answer! Masking by 6 bits is the same as reducing modulo 64 and by coincidence, `((row - 1) + 1) * board_size` is the same as the correct value `(row - '1' + 1) * board_size` modulo 64 (because `(('1' - 1) * board_size) % 64 == 0`).
+Masking by 6 bits is the same as reducing modulo 64 and by coincidence, `((row - 1) + 1) * board_size` is the same as the correct value `(row - '1' + 1) * board_size` modulo 64 (because `(('1' - 1) * board_size) % 64 == 0`).
 
 The undefined behavior gods must have been smiling down on me.
