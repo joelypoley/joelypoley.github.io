@@ -245,5 +245,7 @@ The working is similar to the previous proof so I'll omit some steps.
 </p>
 
 
+[Comment on Hacker News.](https://news.ycombinator.com/item?id=19356584)
+
 --------------------------------------------------------------
 <b id="f1">1</b> I actually scaled by two times the square root of the eigenvalue. The eigenvalue tells you the variance and I wanted the standard deviation. I multiplied by two so that ellipse would capture most of the data. [↩](#a1)
