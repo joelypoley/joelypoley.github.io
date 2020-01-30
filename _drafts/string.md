@@ -5,7 +5,7 @@ title:  "libc++'s implementation of std::string"
 
 ## I. Introduction
 
-libc++ is the [LLVM](http://llvm.org) project's implementation of the C++ standard library.
+[libc++](http://libcxx.llvm.org/) is the [LLVM](http://llvm.org) project's implementation of the C++ standard library.
 libc++'s implementation of `std::string` is a fascinating case study of how to optimize container classes.
 Unfortunately, the source code is very hard to read because it is extremely:
 
@@ -29,11 +29,11 @@ Keep in mind that the way objects are laid out in memory is very specific to the
 
 ## II. Data layout
 
-`std::string` has two modes: long string and short string. It uses a [union](https://en.cppreference.com/w/cpp/language/union) to reuse the same bytes for both modes.
+`std::string` has two modes: long string and short string. It uses a [union](https://en.cppreference.com/w/cpp/language/union) to reuse the same bytes for both modes. Short string mode is an optimization which makes it possible to store up to 22 characters without [heap allocation](https://en.wikipedia.org/wiki/Memory_management#Dynamic_memory_allocation).
 
 #### Long string mode
 
-_Picture goes here._
+![Long string](/assets/long_string.jpg)
 
 The long string mode is a pretty standard string implementation. There are three members:
  * `size_t __cap_` - The amount of space in the underlying character buffer. If the string grows enough that length of the string (including the null-terminator) exceeds `__cap_` then the buffer must be reallocated. `__cap_` is an unsigned 64 bit integer. The least significant bit of `__cap_` is used as a flag, see the discussion below.
@@ -42,8 +42,8 @@ The long string mode is a pretty standard string implementation. There are three
 
  Since each member is 8 bytes, `sizeof(std::string) == 24`.
 
-`std::string` uses the least significant bit of `__cap_` to distinguish whether it is in long-string mode or short-string mode.
-If the least significant bit is set to 1, then it is in long-string mode. If it is set to zero, then it is in short string mode.
+`std::string` uses the least significant bit of `__cap_` to distinguish whether it is in long string mode or short string mode.
+If the least significant bit is set to 1, then it is in long string mode. If it is set to zero, then it is in short string mode.
 It is possible to use the least significant bit in this way because the size of the buffer is guaranteed by the implementation to always be an even number - so the true value for capacity always has a 0 in the least significant bit. 
 Hence the least significant bit of `__cap_` can be used to store a flag to signal that the string is in long string mode.
 The method `std::string::capacity()` has an implementation that is equivalent to this (the real code looks quite different):
@@ -67,13 +67,13 @@ size_t capacity() const noexcept {
 
 #### Short string mode
 
-_Picture goes here_
+![Short string](/assets/short_string.jpg)
 
 The short string mode uses the same 24 bytes to mean something completely different. There are two members:
  * `unsigned char __size_` - The size of the string, left-shifted by one (`__size_ == (true_size << 1)`). The string is left-shifted by one because the least significant bit of the first byte is used as a flag. The least significant bit must be set to 0 in short string mode.
   * `char __data_[23]` - A buffer to hold the characters of the string.
 
-`__size_` stores the size of the string left shifted by 1, so the method `std::string::capacity()` has an implementation equivalent to this:
+`__size_` stores the size of the string left shifted by 1, so the method `std::string::size()` has an implementation equivalent to this:
 
 ```
 size_t size() const noexcept {
@@ -183,7 +183,7 @@ The reason `E` uses any space in the example above is for language-technical rea
 `__compressed_pair` will not use any extra space if `allocator_type` is empty.
 
 
-And that's all there is to it! The implementation of std::string looks like this (with `#ifdef`s removed):
+And that's all there is to it! The implementation of `std::string` looks like this (with `#ifdef`s removed):
 
 ```
 template <class _CharT, class _Traits, class _Allocator>
@@ -245,6 +245,8 @@ typedef basic_string<char> string;
 
 
 [Here](https://github.com/llvm-mirror/libcxx/blob/master/include/string) is the full source on GitHub if you want to take a look.
+
+[Comment on Hacker News](https://news.ycombinator.com/item?id=22145543)
 
 ---------------------------------------------------------------
 
