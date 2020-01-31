@@ -25,7 +25,7 @@ Unfortunately, the source code is very hard to read because it is extremely:
 
 This post examines the implementation of libc++'s `std::string`.
 To keep it simple I will assume you are using a modern compiler and a modern x86 processor<sup id="a1">[1](#f1)</sup>.
-Keep in mind that the way objects are laid out in memory is very specific to the compiler, cpu archictecture and standard library used; everything I describe below is an implementation detail and not defined by the C++ standard.
+Keep in mind that the way objects are laid out in memory is very specific to the compiler, CPU archictecture and standard library used; everything I describe below is an implementation detail and not defined by the C++ standard.
 
 ## II. Data layout
 
@@ -38,14 +38,13 @@ Keep in mind that the way objects are laid out in memory is very specific to the
 The long string mode is a pretty standard string implementation. There are three members:
  * `size_t __cap_` - The amount of space in the underlying character buffer. If the string grows enough that length of the string (including the null-terminator) exceeds `__cap_` then the buffer must be reallocated. `__cap_` is an unsigned 64 bit integer. The least significant bit of `__cap_` is used as a flag, see the discussion below.
  * `size_t __size_` - The size of the current string, not including the [null terminator](https://en.wikipedia.org/wiki/Null-terminated_string). This is also an unsigned 64 bit integer.
- * `char * __data_` - A pointer to the underlying buffer where the characters of the string are stored. This is 64 bits wide.
+ * `char* __data_` - A pointer to the underlying buffer where the characters of the string are stored. This is 64 bits wide.
 
  Since each member is 8 bytes, `sizeof(std::string) == 24`.
 
 `std::string` uses the least significant bit of `__cap_` to distinguish whether it is in long string mode or short string mode.
 If the least significant bit is set to 1, then it is in long string mode. If it is set to zero, then it is in short string mode.
-It is possible to use the least significant bit in this way because the size of the buffer is guaranteed by the implementation to always be an even number - so the true value for capacity always has a 0 in the least significant bit. 
-Hence the least significant bit of `__cap_` can be used to store a flag to signal that the string is in long string mode.
+It is possible to use the least significant bit in this way because the size of the buffer is guaranteed by the implementation to always be an even number - so the true value for the capacity always has a 0 in the least significant bit.
 The method `std::string::capacity()` has an implementation that is equivalent to this (the real code looks quite different):
 
 ```
@@ -70,7 +69,9 @@ size_t capacity() const noexcept {
 ![Short string](/assets/short_string.jpg)
 
 The short string mode uses the same 24 bytes to mean something completely different. There are two members:
- * `unsigned char __size_` - The size of the string, left-shifted by one (`__size_ == (true_size << 1)`). The string is left-shifted by one because the least significant bit of the first byte is used as a flag. The least significant bit must be set to 0 in short string mode.
+ * `unsigned char __size_` - The size of the string, left-shifted by one (`__size_ == (true_size << 1)`).
+The true size of the string is left-shifted by one because the least significant bit of the first byte is used as a flag.
+The least significant bit must be set to 0 in short string mode.
   * `char __data_[23]` - A buffer to hold the characters of the string.
 
 `__size_` stores the size of the string left shifted by 1, so the method `std::string::size()` has an implementation equivalent to this:
@@ -106,46 +107,53 @@ Short mode looks like this:
 static const size_type __short_mask = 0x01;
 static const size_type __long_mask = 0x1ul;
 
-  enum {
-    __min_cap = (sizeof(__long) - 1) / sizeof(value_type) > 2
-                    ? (sizeof(__long) - 1) / sizeof(value_type)
-                    : 2
-  };
+enum {
+  __min_cap = (sizeof(__long) - 1) / sizeof(value_type) > 2
+                  ? (sizeof(__long) - 1) / sizeof(value_type)
+                  : 2
+};
 
-  struct __short {
-    union {
-      unsigned char __size_;
-      value_type __lx;
-    };
-    value_type __data_[__min_cap];
+struct __short {
+  union {
+    unsigned char __size_;
+    value_type __lx;
   };
+  value_type __data_[__min_cap];
+};
 ```
 
-According to [this](https://www.reddit.com/r/cpp/comments/blnwra/stdstring_implementation_in_libc/emqrpz8/) Reddit comment, `__lx` is needed to ensure any [padding](todo) goes after `__size_`, but has no other purpose (I don't fully understand this 🤷‍♂️).
+According to [this](https://www.reddit.com/r/cpp/comments/blnwra/stdstring_implementation_in_libc/emqrpz8/) Reddit comment, `__lx` is needed to ensure any [padding](https://en.wikipedia.org/wiki/Data_structure_alignment) goes after `__size_`, but has no other purpose (I don't fully understand _why_ this forces the padding to go after `__size_` 🤷‍♂).
 `__min_cap` is 23 on the platforms we are considering (64-bit).
+
 So the first byte of `__short` is occupied by `__size_`, and the next 23 are occupied the `__data_` array.
 
 The string is then represented like this:
 
 ```
- enum { __n_words = sizeof(__ulx) / sizeof(size_type) };
+// __ulx is only used to calculate __n_words.
+union __ulx {
+  __long __lx;
+  __short __lxx;
+};
+
+enum { __n_words = sizeof(__ulx) / sizeof(size_type) };
 
 struct __raw {
-    size_type __words[__n_words];
-  };
+  size_type __words[__n_words];
+};
 
-  struct __rep {
-    union {
-      __long __l;
-      __short __s;
-      __raw __r;
-    };
+struct __rep {
+  union {
+    __long __l;
+    __short __s;
+    __raw __r;
   };
+};
 ```
 
-There is a union of `__long` and `__short` as expected.
+The `__rep_` struct represents the string. It is a union of `__long` and `__short` as expected.
 
-The `__raw` struct is just an array of size 24 which allows some of the methods to simply consider the struct as a sequence of bytes without having to care about whether the string is in long or short mode. For example, after a string is moved-from it is zeroed out, and the `__zero()` method is implemented like this:
+The `__raw` struct is just an array of size 24 which allows some of the methods to consider the string as a sequence of bytes without having to care about whether the string is in long or short mode. For example, after a string is moved-from it is zeroed out, and the `__zero()` method is implemented like this:
 
 ```
 void __zero() noexcept {
@@ -157,6 +165,7 @@ void __zero() noexcept {
 Finally, the only member variable in `std::string` is declared like this:
 
 ```
+// allocator_type is the allocator defined by the user of basic_string
 __compressed_pair<__rep, allocator_type> __r_;
 ```
 
