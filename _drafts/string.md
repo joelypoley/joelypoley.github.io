@@ -31,7 +31,7 @@ Keep in mind that the way objects are laid out in memory is very specific to the
 
 `std::string` has two modes: long string and short string. It uses a [union](https://en.cppreference.com/w/cpp/language/union) to reuse the same bytes for both modes. Short string mode is an optimization which makes it possible to store up to 22 characters without [heap allocation](https://en.wikipedia.org/wiki/Memory_management#Dynamic_memory_allocation).
 
-#### Long string mode
+### Long string mode
 
 ![Long string](/assets/long_string.jpg)
 
@@ -65,7 +65,7 @@ size_t capacity() const noexcept {
 }
 ```
 
-#### Short string mode
+### Short string mode
 
 ![Short string](/assets/short_string.jpg)
 
