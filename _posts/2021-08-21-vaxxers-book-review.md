@@ -147,3 +147,4 @@ The take-home message of the book was that we need to be prepared to make vaccin
 Most of the delay when creating the vaccine was logistical: securing funding, getting regulatory approval, conducting clinical trials and collaborating with multinational companies. An end-to-end test of rapid vaccine production, using the flu as a test case, is a great way to make sure every part of the pipeline can move quickly during a future pandemic. Besides, the normal flu is pretty deadly so we should arguably be putting a lot more money into fighting it anyway.
 
 
+[Buy the book here.](https://www.amazon.com.au/Vaxxers-Inside-AstraZeneca-Vaccine-Against/dp/1529369878)
