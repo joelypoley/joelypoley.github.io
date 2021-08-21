@@ -145,3 +145,6 @@ The take-home message of the book was that we need to be prepared to make vaccin
 >For example, might it be cost-effective, given how much flu costs the economy, to work on flu vaccine development with as much urgency as we applied to the Covid vaccine? It would require more funding upfront, and the acceptance that not everything that was tried would work, but it might be the way to make some real progress rather than continuing to limp along as we have in the past, with small projects and no joined-up approach.
 
 Most of the delay when creating the vaccine was logistical: securing funding, getting regulatory approval, conducting clinical trials and collaborating with multinational companies. An end-to-end test of rapid vaccine production, using the flu as a test case, is a great way to make sure every part of the pipeline can move quickly during a future pandemic. Besides, the normal flu is pretty deadly so we should arguably be putting a lot more money into fighting it anyway.
+
+
+[Discuss on Hacker News](https://news.ycombinator.com/item?id=28255660)
