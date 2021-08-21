@@ -58,7 +58,7 @@ Anyway, the Oxford researchers had this vaccine technology but it had never been
 
 They tried two different methods to manufacture the vaccine in parallel. A rapid method which was less likely to work and a slower but more reliable method.
 
-The rapid method was originally developed to help find cancer. You get some mutated DNA from a tumor, create a vaccine, give it to a cancer patient and their immune system will learn to recognize the mutated DNA and attack it. A cancer patient's own immune system could learn to attack the tumour. This immune response sometimes happens without pharmaceutical intervention so the mechanism could plausibly work, but you need a vaccine personalized for every cancer patient's exact tumour mutation. The only way this would be economically viable is with very fast vaccine manufacture.
+The rapid method was originally developed to help fight cancer. You get some mutated DNA from a tumor, create a vaccine, give it to a cancer patient and their immune system will learn to recognize the mutated DNA and attack it. A cancer patient's own immune system could learn to attack the tumour. This immune response sometimes happens without pharmaceutical intervention so the mechanism could plausibly work, but you need a vaccine personalized for every cancer patient's exact tumour mutation. The only way this would be economically viable is with very fast vaccine manufacture.
 
 In both methods the basic process is the same. They inserted some of the adenovirus/COVID-19 DNA into human cells. Remarkably, these cells all originate from the kidney of a single fetus that was aborted in the Netherlands in the 1970s. These human cells have been sitting in labs replicating for the past 50 years. 
 
