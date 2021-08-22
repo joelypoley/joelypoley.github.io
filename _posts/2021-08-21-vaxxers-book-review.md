@@ -44,7 +44,7 @@ I don’t really see how this avoids the ethical concerns. Everybody who is not 
 
 By the time they got approval for the trial Ebola cases were low and there was only enough Ebola going around to test one vaccine. A vaccine developed by a different group was chosen and the Adenovirus-based vaccine was never tested for efficacy.
 
-The Oxford scientists thought this delay was unacceptable, WHO had a different take.
+The Oxford scientists thought this delay was unacceptable. WHO had a different take.
 
 >Why did it take so long to test for efficacy? It was four months from the outcome of the phase II trials until the start of the phase III study. I made this point at a conference where I had been invited to speak about our vaccine trial, and received a rather angry response from a WHO representative who insisted that everything had been done as fast as possible. But the fault does not lie with individuals not doing their job properly in the thick of things. The problem was a lack of preparation. The fact was that the delays meant not only that it took longer to contain the deadly Ebola virus, but also that only one vaccine ended up being tested for efficacy – a vaccine that required very low temperature storage, making it difficult and expensive to use in hot countries.
 
