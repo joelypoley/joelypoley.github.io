@@ -99,9 +99,7 @@ Companies also just have way more money to spend. (Provided the benefit/cost rat
 
 The clinical trials were similar to clinical trials in normal times. Except that the gaps between the stage I, II and III trials were much smaller and all the data was processed much faster. Recruiting volunteers was also much easier.
 
->The recruitment of volunteers to clinical trials is often quite a challenge.
->...
->Within hours of announcing that we were recruiting volunteers for trials, we had thousands of applications.
+>The recruitment of volunteers to clinical trials is often quite a challenge.... [But] Within hours of announcing that we were recruiting volunteers for trials, we had thousands of applications.
 
 The scientists praise the MHRA (the UK health regulator) in the book. They said the MHRA was quite cooperative and was willing to weigh the harms of using a slightly different process than usual against the benefits of manufacturing a vaccine faster. For example, there were some issues with the dosing in the Phase I trials and the MHRA was reasonably flexible. I take what the authors say with a pinch of salt because the MHRA acts as a gatekeeper for all their work. So it is probably unwise for them to heavily criticize the MHRA and sour their relationship with the very same people who they need to cooperate with for the rest of their careers. On the other hand, anecdotes like this are good evidence the praise is genuine:
 
