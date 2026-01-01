@@ -9,14 +9,16 @@ title:  "Music cheat sheet"
 
 ## Keys
 
-| Key         | F♯ | C♯ | G | D | A | E | B |
-|-------------|----|----|---|---|---|---|---|
-| Sharp count | 6  | 7  | 1 | 2 | 3 | 4 | 5 |
+| Major Key   | F♯ | C♯ | G | D | A  | E  | B  |
+|-------------|----|----|---|---|----|----|----|
+| Minor key   | D♯ | A♯ | E | B | F♯ | C♯ | G♯ |
+| Sharp count | 6  | 7  | 1 | 2 | 3  | 4  | 5  |
 
 ![C# Major](/assets/csharp_major.cropped.svg)
 
-| Key        | B♭ | E♭ | A♭ | D♭ | G♭ | C♭ | F |
+| Major Key  | B♭ | E♭ | A♭ | D♭ | G♭ | C♭ | F |
 |------------|----|----|----|----|----|----|---|
+| Minor key  | G  | C  | F  | B♭ | E♭ | A♭ | D |
 | Flat count | 2  | 3  | 4  | 5  | 6  | 7  | 1 |
 
 ![Cb Major](/assets/cflat_major.cropped.svg)
